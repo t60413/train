@@ -512,7 +512,7 @@ function renderCard(){
   else if(p.near){badge=`<span class="state">● 行駛中</span>`;where=p.status===0?`即將到 ${nm(p.near)}`:`剛離開 ${nm(p.near)}`}
   else{badge=`<span class="state">● 行駛中</span>`;where=`往${to.name}途中`}
   const arrO=(tp.stops&&(tp.stops.find(s=>s.id===from.id)||{}).arr)||tp.dep,m=arrO+d-now;
-  const s1=m>.5?`${Math.ceil(m)} 分後`:now<tp.dep+d?"即將進站":"已駛離";
+  const s1=p&&p.at===from.id?"停靠中":m>.5?`${Math.ceil(m)} 分後`:now<tp.dep+d?"即將進站":"已駛離";
   const s3=mode==="live"&&live.has(tp.no)?(d>0?`<b class="late">晚 ${d} 分</b>`:`<b class="ok">準點</b>`):`<b>${fmt(tp.arr+d)}</b>`;
   const k=list.findIndex(t=>t.no===selNo);
   $("card").innerHTML=`<div class="grab"></div>
