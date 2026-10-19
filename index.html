@@ -376,11 +376,14 @@ async function getToken(force){
   if(!r.ok)throw new Error(r.status===400||r.status===401?"金鑰不正確，請檢查 Client Id 和 Secret":"TDX 授權失敗（"+r.status+"）");
   const j=await r.json();token=j.access_token;tokenExp=Date.now()+(j.expires_in||86400)*1000;store.set("gl-token",JSON.stringify({t:token,exp:tokenExp}));return token;
 }
-async function api(path,retry){
-  const t=await getToken();
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+let qChain=Promise.resolve(),lastCall=0;
+function throttle(){const p=qChain.then(async()=>{const w=lastCall+700-Date.now();if(w>0)await sleep(w);lastCall=Date.now()});qChain=p.catch(()=>{});return p}
+async function api(path,tries=0,authRetried=false){
+  const t=await getToken();await throttle();
   let r;try{r=await fetch(API+path+(path.includes("?")?"&":"?")+"%24format=JSON",{headers:{Authorization:"Bearer "+t}})}catch(e){throw new Error("連不上 TDX，請確認網路")}
-  if(r.status===401&&!retry){token=null;store.del("gl-token");await getToken(true);return api(path,true)}
-  if(r.status===429)throw new Error("查詢太頻繁，請等一下再試");
+  if(r.status===401&&!authRetried){token=null;store.del("gl-token");await getToken(true);return api(path,tries,true)}
+  if(r.status===429){if(tries<4){await sleep(1500*(tries+1));return api(path,tries+1,authRetried)}throw new Error("TDX 查詢次數暫時用完，請過幾分鐘再試")}
   if(!r.ok)throw new Error("資料讀取失敗（"+r.status+"）");
   return r.json();
 }
@@ -453,13 +456,16 @@ async function loadODLive(o,d,date){
 const stopCache=new Map();
 function parseStops(arr){let base=null;return(arr||[]).map(x=>{let a=tm(x.ArrivalTime||x.DepartureTime),dd=tm(x.DepartureTime||x.ArrivalTime);if(base===null)base=a;if(a<base-180)a+=1440;if(dd<base-180)dd+=1440;if(dd<a)dd=a;return{id:String(x.StationID),arr:a,dep:dd}})}
 async function fetchTrain(no){
+  const ck=`gl-tr-${todayStr()}-${no}`,cc=mode==="live"&&jget(ck);if(cc)return cc;
   if(mode==="demo"){const t=demoTrains.find(x=>x.no===no);return t?{no,type:t.type,label:t.label,raw:t.label,dest:t.dest,stops:t.stops}:null}
   const j=await api(`DailyTrainTimetable/Today/TrainNo/${no}`);const t=arrOf(j,"TrainTimetables")[0];if(!t)return null;
   const info=t.TrainInfo||t.DailyTrainInfo||{},raw=(info.TrainTypeName&&info.TrainTypeName.Zh_tw)||"",k=classify(raw),stops=parseStops(t.StopTimes);
   stopCache.set(no,stops);
-  return{no:String(no),type:k.type,label:k.label,raw,dest:(info.EndingStationName&&info.EndingStationName.Zh_tw)||(SID[stops[stops.length-1]&&stops[stops.length-1].id]||{}).name||"",stops};
+  const out={no:String(no),type:k.type,label:k.label,raw,dest:(info.EndingStationName&&info.EndingStationName.Zh_tw)||(SID[stops[stops.length-1]&&stops[stops.length-1].id]||{}).name||"",stops};
+  try{Object.keys(localStorage).filter(k=>k.startsWith("gl-tr-")&&!k.startsWith(`gl-tr-${todayStr()}`)).forEach(k=>store.del(k))}catch(e){}
+  store.set(ck,JSON.stringify(out));return out;
 }
-async function loadStops(no){if(stopCache.has(no))return stopCache.get(no);const t=await fetchTrain(no);return t?t.stops:null}
+async function loadStops(no){if(stopCache.has(no))return stopCache.get(no);const cc=jget(`gl-tr-${todayStr()}-${no}`);if(cc){stopCache.set(no,cc.stops);return cc.stops}const t=await fetchTrain(no);return t?t.stops:null}
 let live=new Map(),liveAt=0;
 async function loadLive(){
   const j=await api("TrainLiveBoard");
@@ -469,7 +475,7 @@ async function loadLive(){
 const delayOf=no=>(live.get(no)||{}).delay||0;
 
 // ================= 狀態 =================
-let locked=null,qDay=0,qTime=null,qEarlier=0,qLater=20,tableTrips=null,tableLoading=false;
+let tableErr="",locked=null,qDay=0,qTime=null,qEarlier=0,qLater=20,tableTrips=null,tableLoading=false;
 let from=null,to=null,trips=[],screen="live",selNo=null,follow=true,filter="全部",showAll=false,loading=false,errMsg="";
 
 const allT=()=>locked&&!trips.some(t=>t.no===locked.no)?trips.concat([locked]):trips;
@@ -616,8 +622,8 @@ const dayLbl=o=>{const d=new Date(Date.now()+480*6e4+o*864e5);return `${d.getUTC
 const wkLbl=o=>"日一二三四五六"[new Date(Date.now()+480*6e4+o*864e5).getUTCDay()];
 async function loadTable(){
   if(qDay===0||mode==="demo"){tableTrips=null;renderTable();return}
-  tableLoading=true;tableTrips=[];renderTable();
-  try{tableTrips=await loadODLive(from.id,to.id,dateStr(qDay))}catch(e){tableTrips=[];toast(e.message)}
+  tableLoading=true;tableTrips=[];tableErr="";renderTable();
+  try{tableTrips=await loadODLive(from.id,to.id,dateStr(qDay))}catch(e){tableTrips=[];tableErr=e.message}
   tableLoading=false;renderTable();
 }
 function renderTable(){
@@ -637,7 +643,7 @@ function renderTable(){
   const a=Math.max(0,i0-qEarlier),b=Math.min(base.length,i0+qLater),shown=base.slice(a,b);
   let bn="";
   if(mode==="demo")bn=`<h3>目前是示範模式</h3><p>班次是示範資料。輸入你的 TDX 金鑰，就會顯示<b>台鐵真實時刻</b>和<b>即時誤點</b>。</p><button class="act" data-set>輸入金鑰</button>`;
-  else if(errMsg)bn=`<h3>資料讀取失敗</h3><p>${errMsg}</p><button class="act" id="retry">重新讀取</button>`;
+  else if(errMsg||(!today&&tableErr))bn=`<h3>資料讀取失敗</h3><p>${today?errMsg:tableErr}</p><button class="act" id="retry">重新讀取</button>`;
   else if(busy&&!src.length)bn=`<h3>正在讀取班次…</h3><p>第一次查詢這段路線會比較久一點。</p>`;
   else if(!today)bn=`<h3>${["","明天","後天"][qDay]} ${dayLbl(qDay)}（${wkLbl(qDay)}）的班次</h3><p>${from.name} → ${to.name} 共 ${src.length} 班${src.length?`，首班 <b>${fmt(src[0].dep)}</b>，末班 ${fmt(src[src.length-1].dep)}`:""}。</p>`;
   else if(nx){const dd=delayOf(nx.no),mm=Math.max(0,Math.ceil(nx.dep+dd-now));bn=`<h3>下一班 ${mm} 分後發車</h3><p>${nx.label} ${nx.no}，<b>${fmt(nx.dep)}</b> 從${from.name}出發${dd>0?`（目前晚 ${dd} 分）`:""}，${fmt(nx.arr)} 抵達${to.name}。</p>`}
@@ -674,7 +680,7 @@ $("list").addEventListener("click",e=>{
   if(act&&act.act==="lock"){setLock(t.no,t);return}
   if(t.dep+delayOf(t.no)<nowMin()-.3&&!posOf(t,nowMin()))return;
   selNo=t.no;go("live");setFollow(true);renderCard();ensureStops()});
-$("banner").addEventListener("click",e=>{if(e.target.id==="retry")refreshAll()});
+$("banner").addEventListener("click",e=>{if(e.target.id==="retry"){if(qDay&&tableErr)loadTable();else refreshAll()}});
 
 // ================= 我的車次（鎖定） =================
 async function setLock(no,hint){
@@ -741,8 +747,8 @@ let stopsBusy=false;
 async function ensureStops(){
   if(mode!=="live"||stopsBusy)return;stopsBusy=true;
   try{const now=nowMin();
-    const want=trips.filter(t=>!t.stops&&(t.no===selNo||(t.dep-90<now&&t.arr+15>now))).sort((a,b)=>(b.no===selNo)-(a.no===selNo)).slice(0,8);
-    for(const t of want){try{t.stops=await loadStops(t.no)}catch(e){if(/頻繁/.test(e.message))break}await new Promise(r=>setTimeout(r,250))}
+    const want=trips.filter(t=>!t.stops&&(t.no===selNo||(t.dep-90<now&&t.arr+15>now))).sort((a,b)=>(b.no===selNo)-(a.no===selNo)).slice(0,4);
+    for(const t of want){try{t.stops=await loadStops(t.no)}catch(e){break}}
     if(want.length){computeRoute();renderCard()}
   }finally{stopsBusy=false}
 }
