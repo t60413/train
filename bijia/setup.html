@@ -1,0 +1,181 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>比價小幫手 設定教學</title>
+<style>body{margin:0;background:#07131d;color:#eaf4ff;font:16px/1.6 -apple-system,"PingFang TC",sans-serif;padding:20px max(18px,env(safe-area-inset-left)) 60px}
+h1{font-size:22px;margin:8px 0 16px}ol{padding-left:22px}li{margin:10px 0}b{color:#3ee3ff}.box{background:rgba(255,255,255,.06);border:1px solid rgba(190,235,255,.2);border-radius:16px;padding:16px;margin:16px 0}
+button{font:inherit;font-weight:700;border:0;border-radius:12px;padding:14px;width:100%;background:linear-gradient(180deg,#7cf2ff,#3ee3ff);color:#03222c;box-shadow:0 0 16px rgba(62,227,255,.5)}
+textarea{width:100%;height:120px;background:#000;color:#9fd;border-radius:10px;border:0;font-size:11px;margin-top:10px}.ok{color:#3ee3ff;text-align:center;margin-top:8px}a{color:#3ee3ff}</style></head><body>
+<h1>比價小幫手：伺服器設定</h1>
+<div class="box"><b>步驟 1</b>　先按這裡複製伺服器程式<br><br><button id="cp">複製伺服器程式</button><div class="ok" id="ok"></div><textarea id="code" readonly>// 比價小幫手 伺服器（Cloudflare Worker）
+// 功能：/search?q=商品  → 同時搜尋多個平台，回傳價格列表
+//       /identify (POST) → 用 AI 認出照片裡的商品（需要設定 ANTHROPIC_KEY）
+// 平台搜尋網址參考自 MIT 授權的開源專案 coseto6125/mcp-taiwan-price-compare
+
+const UA = &#x27;Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1&#x27;;
+const CORS = {
+  &#x27;access-control-allow-origin&#x27;: &#x27;*&#x27;,
+  &#x27;access-control-allow-methods&#x27;: &#x27;GET,POST,OPTIONS&#x27;,
+  &#x27;access-control-allow-headers&#x27;: &#x27;content-type&#x27;,
+};
+const json = (d, s = 200, extra = {}) =&gt;
+  new Response(JSON.stringify(d), { status: s, headers: { &#x27;content-type&#x27;: &#x27;application/json; charset=utf-8&#x27;, ...CORS, ...extra } });
+
+// 在任意物件裡找第一個像圖片網址的字串
+function findImg(o, depth = 0) {
+  if (!o || depth &gt; 3) return &#x27;&#x27;;
+  if (typeof o === &#x27;string&#x27;) return /\.(jpe?g|png|webp)(\?|$)/i.test(o) ? o : &#x27;&#x27;;
+  if (Array.isArray(o)) { for (const x of o) { const r = findImg(x, depth + 1); if (r) return r; } return &#x27;&#x27;; }
+  if (typeof o === &#x27;object&#x27;) {
+    const keys = Object.keys(o).sort((a, b) =&gt; (/img|image|pic|photo/i.test(b) ? 1 : 0) - (/img|image|pic|photo/i.test(a) ? 1 : 0));
+    for (const k of keys) { const r = findImg(o[k], depth + 1); if (r) return r; }
+  }
+  return &#x27;&#x27;;
+}
+const abs = (u, base) =&gt; !u ? &#x27;&#x27; : u.startsWith(&#x27;//&#x27;) ? &#x27;https:&#x27; + u : u.startsWith(&#x27;http&#x27;) ? u : base + (u.startsWith(&#x27;/&#x27;) ? &#x27;&#x27; : &#x27;/&#x27;) + u;
+const num = v =&gt; { const n = parseFloat(String(v ?? &#x27;&#x27;).replace(/[^\d.]/g, &#x27;&#x27;)); return n &gt; 0 ? n : 0; };
+
+async function withTimeout(p, ms = 9000) {
+  let t; const to = new Promise((_, rej) =&gt; (t = setTimeout(() =&gt; rej(new Error(&#x27;timeout&#x27;)), ms)));
+  try { return await Promise.race([p, to]); } finally { clearTimeout(t); }
+}
+
+const SOURCES = {
+  async pchome(q) {
+    const r = await fetch(`https://ecshweb.pchome.com.tw/search/v3.3/all/results?q=${encodeURIComponent(q)}&amp;page=1&amp;sort=rnk/dc`, { headers: { &#x27;user-agent&#x27;: UA, accept: &#x27;application/json&#x27; } });
+    if (!r.ok) throw new Error(&#x27;HTTP &#x27; + r.status);
+    const d = await r.json();
+    return (d.prods || []).filter(p =&gt; !String(p.name).includes(&#x27;【加價購】&#x27;)).map(p =&gt; ({
+      title: p.name, price: num(p.price), url: `https://24h.pchome.com.tw/prod/${p.Id}`,
+      img: p.picB ? &#x27;https://cs-a.ecimg.tw&#x27; + p.picB : &#x27;&#x27;,
+    }));
+  },
+  async momo(q) {
+    const body = { host: &#x27;ecmobile&#x27;, flag: &#x27;searchEngine&#x27;, data: { searchValue: q, curPage: 1, maxPage: 30, cateLevel: -1, serviceCode: &#x27;MT01&#x27;, platform: 16, has3P: &#x27;Y&#x27;, NAM: &#x27;N&#x27;, china: &#x27;N&#x27;, cp: &#x27;N&#x27;, first: &#x27;N&#x27;, freeze: &#x27;N&#x27;, prefere: &#x27;N&#x27;, stockYN: &#x27;N&#x27;, superstore: &#x27;N&#x27;, threeHours: &#x27;N&#x27;, tomorrow: &#x27;N&#x27;, tvshop: &#x27;N&#x27;, video: &#x27;N&#x27;, cycle: &#x27;N&#x27;, cod: &#x27;N&#x27;, superstorePay: &#x27;N&#x27;, moCoinFeedback: &#x27;N&#x27;, superstoreFree: &#x27;N&#x27;, discount: &#x27;N&#x27;, isBrandSeriesPage: false, isShowAdShop: false, curRecommendedWordsCnt: 0 } };
+    const r = await fetch(&#x27;https://apisearch.momoshop.com.tw/momoSearchCloud/moec/textSearch&#x27;, { method: &#x27;POST&#x27;, headers: { &#x27;content-type&#x27;: &#x27;application/json&#x27;, origin: &#x27;https://m.momoshop.com.tw&#x27;, referer: &#x27;https://m.momoshop.com.tw/&#x27;, &#x27;user-agent&#x27;: UA }, body: JSON.stringify(body) });
+    if (!r.ok) throw new Error(&#x27;HTTP &#x27; + r.status);
+    const d = await r.json();
+    if (!d.success) throw new Error(&#x27;blocked&#x27;);
+    return ((d.rtnSearchData || {}).goodsInfoList || []).filter(g =&gt; g.goodsCode &amp;&amp; g.goodsName).map(g =&gt; ({
+      title: g.goodsName, price: num(g.SALE_PRICE ?? g.goodsPrice), url: `https://www.momoshop.com.tw/goods/GoodsDetail.jsp?i_code=${g.goodsCode}`,
+      img: abs(findImg(g), &#x27;https://img.momoshop.com.tw&#x27;),
+    }));
+  },
+  async pxbox(q) { // 全聯線上購
+    const r = await fetch(&#x27;https://api-pxbox.es.pxmart.com.tw/app/2.0/spu/single_search&#x27;, { method: &#x27;POST&#x27;, headers: { &#x27;content-type&#x27;: &#x27;application/json&#x27;, origin: &#x27;https://pxbox.es.pxmart.com.tw&#x27;, referer: &#x27;https://pxbox.es.pxmart.com.tw/&#x27;, &#x27;user-agent&#x27;: UA },
+      body: JSON.stringify({ search_setting_type: 2, keyword: q, sort_type: 3, sort_order: 1, page_index: 1, page_size: 40, filters: [] }) });
+    if (!r.ok) throw new Error(&#x27;HTTP &#x27; + r.status);
+    const d = await r.json();
+    return ((d.data || {}).product_list || []).filter(p =&gt; !p.is_sold_out &amp;&amp; !p.is_ad).map(p =&gt; ({
+      title: p.product_name, price: num(p.sale_price), url: `https://pxbox.es.pxmart.com.tw/product/${p.id}`,
+      img: abs(findImg(p), &#x27;https://pxbox.es.pxmart.com.tw&#x27;),
+    }));
+  },
+  async yahoo(q) {
+    const r = await fetch(`https://tw.buy.yahoo.com/search/product?p=${encodeURIComponent(q)}`, { headers: { &#x27;user-agent&#x27;: UA, accept: &#x27;text/html&#x27; } });
+    if (!r.ok) throw new Error(&#x27;HTTP &#x27; + r.status);
+    const html = await r.text();
+    const a = html.indexOf(&#x27;&lt;script id=&quot;isoredux-data&quot; type=&quot;mime/invalid&quot;&gt;&#x27;);
+    if (a &lt; 0) throw new Error(&#x27;no data&#x27;);
+    const b = html.indexOf(&#x27;&lt;/script&gt;&#x27;, a);
+    const d = JSON.parse(html.slice(a + 47, b));
+    return (((d.search || {}).ecsearch || {}).hits || []).filter(h =&gt; h.ec_item_url).map(h =&gt; ({
+      title: h.ec_title, price: num(h.ec_price), url: h.ec_item_url, img: abs(h.ec_image || findImg(h), &#x27;https://s.yimg.com&#x27;),
+    }));
+  },
+  async costco(q) {
+    const r = await fetch(`https://www.costco.com.tw/rest/v2/taiwan/products/search?query=${encodeURIComponent(q)}&amp;fields=FULL&amp;lang=zh_TW&amp;curr=TWD&amp;pageSize=30`, { headers: { &#x27;user-agent&#x27;: UA, accept: &#x27;application/json&#x27;, referer: &#x27;https://www.costco.com.tw/search&#x27; } });
+    if (!r.ok) throw new Error(&#x27;HTTP &#x27; + r.status);
+    const d = await r.json();
+    return (d.products || []).map(p =&gt; ({
+      title: p.name, price: num((p.price || {}).value), url: &#x27;https://www.costco.com.tw&#x27; + (p.url || &#x27;&#x27;),
+      img: abs(((p.images || [])[0] || {}).url || findImg(p.images), &#x27;https://www.costco.com.tw&#x27;),
+    }));
+  },
+  async etmall(q) {
+    const r = await fetch(`https://www.etmall.com.tw/Search/Get?Keyword=${encodeURIComponent(q)}&amp;SortType=0&amp;PageSize=30&amp;PageIndex=0`, { headers: { &#x27;user-agent&#x27;: UA, accept: &#x27;application/json&#x27;, referer: &#x27;https://www.etmall.com.tw/&#x27; } });
+    if (!r.ok) throw new Error(&#x27;HTTP &#x27; + r.status);
+    const d = await r.json();
+    return (((d.SearchProductResult || {}).products) || []).map(p =&gt; ({
+      title: p.title, price: num(p.finalPrice), url: p.pageLink ? &#x27;https://www.etmall.com.tw&#x27; + p.pageLink : `https://www.etmall.com.tw/i/${p.id}`,
+      img: abs(p.imageUrl || findImg(p), &#x27;https://media.etmall.com.tw&#x27;),
+    }));
+  },
+};
+
+// 標題和關鍵字的相似度（中文逐字比對）
+function relevance(title, q) {
+  const t = String(title).toLowerCase().replace(/\s+/g, &#x27;&#x27;);
+  const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+  let hit = 0, all = 0;
+  for (const w of words) for (const ch of w) { all++; if (t.includes(ch)) hit++; }
+  return all ? hit / all : 0;
+}
+
+async function search(q) {
+  const names = Object.keys(SOURCES);
+  const settled = await Promise.allSettled(names.map(n =&gt; withTimeout(SOURCES[n](q))));
+  const status = {}; let results = [];
+  settled.forEach((s, i) =&gt; {
+    const n = names[i];
+    if (s.status === &#x27;fulfilled&#x27;) {
+      const list = s.value.filter(x =&gt; x.title &amp;&amp; x.price &gt; 0).map(x =&gt; ({ ...x, platform: n, score: relevance(x.title, q) })).filter(x =&gt; x.score &gt;= 0.6).slice(0, 25);
+      status[n] = { ok: true, count: list.length };
+      results.push(...list);
+    } else status[n] = { ok: false, error: String(s.reason &amp;&amp; s.reason.message || s.reason) };
+  });
+  results.sort((a, b) =&gt; a.price - b.price);
+  return { q, time: new Date().toISOString(), status, results };
+}
+
+const PROMPT = `你是台灣的購物比價助手。這張照片可能是商品、包裝、貨架價格標籤或網購截圖。找出照片中最主要的一個商品。
+只回覆一個 JSON 物件：{&quot;name&quot;:&quot;商品名稱（繁體中文，品牌＋品項）&quot;,&quot;keyword&quot;:&quot;拿去網購搜尋最準的關鍵字（品牌＋品名＋容量，例如：瑞穗鮮乳 936ml）&quot;,&quot;price&quot;:照片上看得到的售價數字或null}
+照片裡沒有商品時 name 給空字串。`;
+
+async function identify(req, env) {
+  if (!env.ANTHROPIC_KEY) return json({ error: &#x27;no_key&#x27; }, 400);
+  const { image } = await req.json();
+  if (!image || image.length &gt; 6_000_000) return json({ error: &#x27;bad_image&#x27; }, 400);
+  const r = await fetch(&#x27;https://api.anthropic.com/v1/messages&#x27;, {
+    method: &#x27;POST&#x27;,
+    headers: { &#x27;x-api-key&#x27;: env.ANTHROPIC_KEY, &#x27;anthropic-version&#x27;: &#x27;2023-06-01&#x27;, &#x27;content-type&#x27;: &#x27;application/json&#x27; },
+    body: JSON.stringify({ model: env.MODEL || &#x27;claude-haiku-5-5&#x27;, max_tokens: 300, messages: [{ role: &#x27;user&#x27;, content: [
+      { type: &#x27;image&#x27;, source: { type: &#x27;base64&#x27;, media_type: &#x27;image/jpeg&#x27;, data: image } }, { type: &#x27;text&#x27;, text: PROMPT }] }] }),
+  });
+  if (!r.ok) return json({ error: &#x27;ai_&#x27; + r.status }, 502);
+  const t = ((await r.json()).content || []).map(c =&gt; c.text || &#x27;&#x27;).join(&#x27;&#x27;);
+  const a = t.indexOf(&#x27;{&#x27;), b = t.lastIndexOf(&#x27;}&#x27;);
+  try { return json(JSON.parse(t.slice(a, b + 1))); } catch { return json({ error: &#x27;invalid_json&#x27; }, 502); }
+}
+
+export default {
+  async fetch(req, env, ctx) {
+    if (req.method === &#x27;OPTIONS&#x27;) return new Response(null, { headers: CORS });
+    const url = new URL(req.url);
+    if (url.pathname === &#x27;/identify&#x27; &amp;&amp; req.method === &#x27;POST&#x27;) return identify(req, env);
+    if (url.pathname === &#x27;/search&#x27;) {
+      const q = (url.searchParams.get(&#x27;q&#x27;) || &#x27;&#x27;).trim().slice(0, 60);
+      if (!q) return json({ error: &#x27;no_query&#x27; }, 400);
+      const cache = caches.default, key = new Request(`https://cache.local/search?q=${encodeURIComponent(q)}`);
+      const hit = await cache.match(key);
+      if (hit) return new Response(hit.body, { headers: { ...Object.fromEntries(hit.headers), ...CORS } });
+      const res = json(await search(q), 200, { &#x27;cache-control&#x27;: &#x27;public, max-age=600&#x27; });
+      ctx.waitUntil(cache.put(key, res.clone()));
+      return res;
+    }
+    return json({ ok: true, app: &#x27;比價小幫手伺服器&#x27;, ai: !!env.ANTHROPIC_KEY });
+  },
+};
+</textarea></div>
+<div class="box"><b>步驟 2</b>　建立 Cloudflare 伺服器
+<ol><li>用 Safari 打開 <a href="https://dash.cloudflare.com/sign-up" target="_blank">dash.cloudflare.com</a>，用 Email 免費註冊並登入</li>
+<li>找到 <b>Workers 和 Pages</b>（在左上角選單 ☰ 裡），按 <b>建立</b></li>
+<li>選 <b>從 Hello World 開始</b>（或「建立 Worker」），名稱打 <b>bijia</b>，按 <b>部署</b></li>
+<li>按 <b>編輯程式碼</b>，把裡面的程式全部刪掉，長按貼上剛剛複製的程式</li>
+<li>按右上角 <b>部署</b></li>
+<li>複製它顯示的網址，像 <b>https://bijia.你的名字.workers.dev</b></li></ol></div>
+<div class="box"><b>步驟 3</b>　連上 App
+<ol><li>打開 <a href="./">比價小幫手</a> → 底下「工具」</li><li>貼上網址 → 按 <b>儲存並測試</b>，看到「連線成功」就完成了</li></ol></div>
+<div class="box"><b>選用：開啟拍照辨識</b>
+<ol><li>到 <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> 申請 API 金鑰（要儲值，每張照片約幾毛錢）</li>
+<li>回到 Cloudflare 的 bijia → <b>設定</b> → <b>變數和密碼</b> → 新增</li>
+<li>類型選 <b>密碼</b>，名稱打 <b>ANTHROPIC_KEY</b>，值貼上金鑰 → 部署</li></ol></div>
+<script>document.getElementById('cp').onclick=async()=>{const t=document.getElementById('code');try{await navigator.clipboard.writeText(t.value);document.getElementById('ok').textContent='已複製 ✓ 到 Cloudflare 貼上'}catch(e){t.focus();t.select();document.getElementById('ok').textContent='請按「拷貝」'}}</script>
+</body></html>
