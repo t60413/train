@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="火車時刻">
+<meta name="theme-color" content="#2550e6">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<style>body{margin:0}.top{padding-top:calc(16px + env(safe-area-inset-top,0px))!important}</style>
+</head><body>
+<title>火車時刻</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* Layout: phone-width app centered on an electric-blue ambient field — onboarding, live map with glass bottom card, timetable list, glass tab bar */
+:root{
+  color-scheme:dark;
+  --bg:#040817; --ink:#0a1128; --glass:rgba(22,34,78,.62); --stroke:rgba(120,150,255,.18);
+  --blue:#2f63ff; --blue-hi:#6b95ff; --blue-deep:#1e3fc4; --fg:#eef2ff; --muted:#8c99c6; --dim:#56628f;
+  --red:#ff6b7d; --ok:#4fe3a1;
+  --font:"Nunito","Noto Sans TC",-apple-system,"PingFang TC",sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);-webkit-tap-highlight-color:transparent;overflow:hidden;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+button:focus-visible{outline:2px solid var(--blue-hi);outline-offset:2px}
+.amb{position:fixed;inset:0;pointer-events:none;background:
+  radial-gradient(40% 60% at 50% 0%,rgba(150,180,255,.45),transparent 70%),
+  radial-gradient(35% 50% at 8% 70%,rgba(70,110,255,.35),transparent 70%),
+  radial-gradient(35% 50% at 95% 75%,rgba(70,110,255,.3),transparent 70%),
+  linear-gradient(180deg,#0a1440,#040817 70%)}
+.app{position:relative;height:100%;max-width:460px;margin:0 auto;display:flex;flex-direction:column;background:var(--ink);overflow:hidden;box-shadow:0 0 0 1px var(--stroke),0 30px 80px rgba(0,0,0,.6)}
+@media (min-width:600px){.app{height:calc(100% - 40px);margin-top:20px;border-radius:40px}}
+.screen{flex:1;min-height:0;display:flex;flex-direction:column;position:relative}
+
+.top{background:radial-gradient(120% 140% at 80% -20%,#5b86ff,transparent 60%),linear-gradient(180deg,#3567ff,#244fe0);padding-block:16px 46px;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px));display:flex;align-items:center;gap:14px}
+.circ{flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;border:1.5px solid rgba(255,255,255,.35);color:#fff;transition:transform .15s}
+.circ:active{transform:scale(.92)}
+.top h1{margin:0;font-size:19px;font-weight:800}
+.top p{margin:2px 0 0;font-size:13px;color:rgba(255,255,255,.72)}
+.top .grow{flex:1;min-width:0}
+.routepill{display:inline-flex;align-items:center;gap:6px;margin-top:3px;font-size:14px;color:#fff;font-weight:700}
+.routepill span{opacity:.75}
+
+.mapbox{position:relative;flex:1;min-height:0;margin-top:-30px;border-radius:30px 30px 0 0;overflow:hidden;background:#0a1024;box-shadow:0 -10px 30px rgba(0,0,0,.35)}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+.locate{position:absolute;right:16px;bottom:280px;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:rgba(30,50,130,.75);border:1px solid var(--stroke);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:var(--blue-hi);transition:background .2s}
+.locate.on{background:var(--blue);color:#fff;box-shadow:0 0 20px rgba(47,99,255,.6)}
+.zoom{position:absolute;right:16px;top:16px;display:flex;flex-direction:column;border-radius:16px;overflow:hidden;background:rgba(20,32,80,.7);border:1px solid var(--stroke);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.zoom button{width:44px;height:40px;font-size:20px;color:var(--fg)}
+.zoom button+button{border-top:1px solid var(--stroke)}
+.card{position:absolute;left:12px;right:12px;bottom:12px;background:linear-gradient(180deg,rgba(46,72,170,.72),rgba(24,40,104,.86));border:1px solid rgba(140,170,255,.4);border-radius:24px;padding:8px 16px 16px;-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);box-shadow:0 20px 40px rgba(0,0,0,.45);display:flex;flex-direction:column;gap:12px}
+.grab{width:40px;height:4px;border-radius:2px;background:rgba(255,255,255,.35);margin:0 auto}
+.chead{display:flex;align-items:center;gap:12px}
+.tile{flex:none;width:44px;height:44px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(160deg,color-mix(in srgb,var(--c,#2f63ff) 100%,#fff 25%),var(--c,#2f63ff));color:#fff;box-shadow:0 0 0 1px rgba(255,255,255,.18) inset,0 6px 16px color-mix(in srgb,var(--c,#2f63ff) 45%,transparent)}
+.chead h2{margin:0;font-size:18px;font-weight:800}
+.chead p{margin:1px 0 0;font-size:12px;color:var(--muted)}
+.state{margin-left:auto;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:rgba(79,227,161,.14);color:var(--ok);white-space:nowrap}
+.state.wait{background:rgba(140,153,198,.16);color:var(--muted)}
+.state.stop{background:rgba(255,200,90,.16);color:#ffd27a}
+.where{font-size:15px;padding:10px 12px;border-radius:12px;background:rgba(0,0,0,.2);color:var(--muted)}
+.where b{color:#fff;font-weight:700}
+.stats{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:10px;padding-top:12px;border-top:1px solid rgba(160,185,255,.16)}
+.stats div{min-width:0}
+.stats small{display:block;font-size:11px;color:var(--muted)}
+.stats b{display:block;font-size:14px;font-weight:700;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stats b.hl{color:var(--blue-hi);font-size:17px}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border-radius:12px;font-size:14px;font-weight:700}
+.btn.blue{background:var(--blue);color:#fff;box-shadow:0 6px 18px rgba(47,99,255,.35)}
+.btn.line{background:rgba(255,120,140,.14);border:1px solid rgba(255,120,140,.22);color:#ffd0d6}
+.btn:disabled{opacity:.35}
+
+.scroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;margin-top:-30px;border-radius:30px 30px 0 0;background:linear-gradient(180deg,#0f1a44,var(--ink) 340px);padding-block:18px 24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:16px}
+.scroll>*{flex-shrink:0}
+.banner{padding:16px 18px;border-radius:22px;background:linear-gradient(135deg,#0a0f26,#1a2358);border:1px solid rgba(140,170,255,.22);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 12px 30px rgba(0,0,0,.35)}
+.banner h3{margin:0;font-size:17px;font-weight:800;color:var(--red)}
+.banner p{margin:6px 0 0;font-size:13px;color:#cdd5f3;line-height:1.6}
+.banner p b{color:var(--red)}
+.route{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;padding:12px;border-radius:18px;background:var(--glass);border:1px solid var(--stroke)}
+.stn{display:flex;flex-direction:column;padding:4px 8px;border-radius:12px;text-align:left}
+.stn:last-child{text-align:right;align-items:flex-end}
+.stn small{font-size:11px;color:var(--muted)}
+.stn b{font-size:21px;font-weight:800}
+.swap{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--blue);color:#fff;transition:transform .35s}
+.swap.spin{transform:rotate(180deg)}
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;display:flex;align-items:center;gap:8px;padding:6px 14px 6px 6px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid var(--stroke);font-size:14px;font-weight:700;color:#cfd7f5}
+.chip i{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:rgba(255,255,255,.08);font-style:normal}
+.chip[aria-pressed="true"]{background:rgba(20,30,80,.9);border-color:var(--blue-hi);color:#fff;box-shadow:0 0 0 1px rgba(107,149,255,.35),0 0 18px rgba(47,99,255,.25)}
+.chip[aria-pressed="true"] i{background:var(--c);color:#fff;box-shadow:0 0 12px color-mix(in srgb,var(--c) 60%,transparent)}
+.chip i{color:var(--c)}
+.sect{display:flex;justify-content:space-between;align-items:baseline;font-size:16px;font-weight:800}
+.sect span{font-size:12px;color:var(--muted);font-weight:600}
+.list{display:flex;flex-direction:column;gap:12px}
+.item{display:grid;grid-template-columns:86px minmax(0,1fr);gap:14px;padding:12px;border-radius:22px;background:linear-gradient(180deg,rgba(30,46,104,.55),rgba(18,28,70,.55));border:1px solid var(--stroke);text-align:left;width:100%}
+.item.next{border-color:var(--blue-hi);box-shadow:0 0 0 1px rgba(107,149,255,.4),0 10px 30px rgba(47,99,255,.2)}
+.thumb{height:92px;border-radius:16px;display:grid;place-items:center;position:relative;overflow:hidden;background:radial-gradient(70% 60% at 50% 35%,color-mix(in srgb,var(--c) 38%,transparent),transparent 72%),linear-gradient(180deg,#141d44,#0b1230);border:1px solid rgba(140,170,255,.14)}
+.thumb svg{margin-top:-10px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.45))}
+.thumb small{position:absolute;bottom:6px;font-size:10px;font-weight:800;color:#dfe6ff;letter-spacing:.04em}
+.info h4{margin:2px 0 0;font-size:16px;font-weight:800;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.info .times{margin-top:4px;font-size:22px;font-weight:800}
+.info .times span{color:var(--blue-hi);margin:0 6px;font-size:16px}
+.info .meta{font-size:12px;color:var(--muted);margin-top:2px}
+.info .row{display:flex;align-items:center;justify-content:space-between;margin-top:10px;gap:8px}
+.price{font-size:12px;color:var(--muted);display:flex;align-items:flex-start;gap:1px}
+.price sup{font-size:11px;font-weight:800;color:#fff;margin-top:2px}
+.price b{font-size:20px;color:#fff;line-height:1}
+.price small{margin:6px 0 0 6px}
+.pillbtn{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:11px;background:rgba(60,100,255,.3);border:1px solid rgba(120,155,255,.3);color:#e3eaff;font-size:13px;font-weight:700;white-space:nowrap}
+.item.next .pillbtn{background:var(--blue);color:#fff}
+.cd{font-size:12px;font-weight:700;color:var(--blue-hi)}
+.cd.soon{color:var(--ok)}
+.empty{padding:30px 0;text-align:center;color:var(--muted)}
+.foot{font-size:11px;color:var(--dim);text-align:center;line-height:1.7;margin:0}
+.more{align-self:center;padding:8px 16px;border-radius:12px;border:1px solid var(--stroke);font-size:13px;color:var(--muted)}
+
+.tabbar{display:grid;grid-template-columns:1fr 1fr;background:rgba(10,16,40,.95);border-top:1px solid var(--stroke);padding-bottom:max(6px,env(safe-area-inset-bottom,0px));padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+.tabbar button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 0 6px;font-size:11px;font-weight:700;color:var(--dim)}
+.tabbar button[aria-current="true"]{color:var(--blue-hi)}
+
+.splash{position:absolute;inset:0;z-index:40;background:#03050d;display:flex;flex-direction:column;transition:opacity .45s,transform .45s}
+.splash.out{opacity:0;transform:scale(1.04);pointer-events:none}
+.splash svg{width:100%;flex:1;min-height:0}
+.splash .txt{padding-block:0 24px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px))}
+.splash h2{margin:0;font-size:30px;font-weight:800;line-height:1.3}
+.splash p{margin:12px 0 0;font-size:15px;color:#b9c3e6;line-height:1.7}
+.splash p b{color:#fff}
+.dots{display:flex;gap:6px;margin:22px 0 28px}
+.dots i{width:22px;height:4px;border-radius:2px;background:var(--blue-deep)}
+.dots i:last-child{width:46px;background:var(--blue)}
+.start{width:100%;padding:16px;border-radius:16px;background:linear-gradient(180deg,#4677ff,#2f5cf0);font-size:16px;font-weight:800;box-shadow:0 10px 30px rgba(47,99,255,.4);margin-bottom:max(8px,env(safe-area-inset-bottom,0px))}
+
+.overlay{position:absolute;inset:0;z-index:30;background:rgba(2,4,14,.6);display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .25s}
+.overlay.show{opacity:1;pointer-events:auto}
+.sheet{width:100%;max-height:75%;display:flex;flex-direction:column;background:linear-gradient(180deg,#16245c,#0b1330);border-radius:28px 28px 0 0;border-top:1px solid var(--stroke);transform:translateY(100%);transition:transform .35s cubic-bezier(.2,.8,.2,1);padding-bottom:env(safe-area-inset-bottom,0px)}
+.overlay.show .sheet{transform:none}
+.sheet h3{margin:12px 0 14px;text-align:center;font-size:17px;font-weight:800}
+.plist{overflow-y:auto;padding:0 16px 18px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.plist button{padding:12px 0;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid var(--stroke);font-size:15px;font-weight:600}
+.plist button.cur{background:var(--blue);border-color:var(--blue-hi);font-weight:800}
+.plist button.other{opacity:.4}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-train" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2c-4 0-8 .5-8 4v9.5A3.5 3.5 0 0 0 7.5 19L6 20.5v.5h2.2l2-2h3.6l2 2H18v-.5L16.5 19a3.5 3.5 0 0 0 3.5-3.5V6c0-3.5-4-4-8-4zM7.5 17a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3.5-7H6V6h5v4zm2 0V6h5v4h-5zm3.5 7a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></symbol>
+  <linearGradient id="gBody" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#d7dcea"/><stop offset="1" stop-color="#7d86a3"/></linearGradient>
+  <linearGradient id="gGlass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a2550"/><stop offset=".6" stop-color="#0b1130"/><stop offset="1" stop-color="#2b4ab8"/></linearGradient>
+  <symbol id="i-front" viewBox="0 0 60 60">
+    <ellipse cx="30" cy="54" rx="20" ry="3.5" fill="currentColor" opacity=".55"/>
+    <path d="M13 46V21C13 10 21 5 30 5s17 5 17 16v25q0 4-4 4H17q-4 0-4-4z" fill="url(#gBody)"/>
+    <path d="M17.5 15C20 10 25 8.5 30 8.5s10 1.5 12.5 6.5l1 11.5h-27z" fill="url(#gGlass)"/>
+    <path d="M20 13l6-3-4.5 16.5H17.6z" fill="#fff" opacity=".22"/>
+    <rect x="13" y="32" width="34" height="4.5" fill="currentColor"/>
+    <rect x="13" y="37.5" width="34" height="1.2" fill="currentColor" opacity=".5"/>
+    <circle cx="19.5" cy="43" r="2.6" fill="#fff6d2"/><circle cx="40.5" cy="43" r="2.6" fill="#fff6d2"/>
+    <rect x="26" y="41.5" width="8" height="3" rx="1" fill="#2a3358"/>
+    <rect x="17" y="50" width="26" height="3" rx="1.5" fill="#1a2240"/>
+  </symbol>
+  <symbol id="i-map" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M9 4L3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4z"/><path d="M9 4v13M15 6.5v13"/></g></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/></g></symbol>
+  <symbol id="i-swap" viewBox="0 0 24 24"><path d="M7 4v16M3 8l4-4 4 4M17 20V4M13 16l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-loc" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></g></symbol>
+</svg>
+
+<div class="amb"></div>
+<div class="app" id="app">
+
+  <section class="screen" id="scrLive">
+    <header class="top">
+      <button class="circ" id="liveSwap" aria-label="交換方向"><svg width="18" height="18"><use href="#i-swap"/></svg></button>
+      <div class="grow">
+        <h1>列車位置</h1>
+        <button class="routepill" id="liveRoute"><b id="lFrom">桃園</b><span>→</span><b id="lTo">松山</b><svg width="12" height="12" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></button>
+      </div>
+    </header>
+    <div class="mapbox" id="mapbox">
+      <canvas id="map" aria-label="列車位置地圖"></canvas>
+      <div class="zoom"><button id="zin" aria-label="放大">＋</button><button id="zout" aria-label="縮小">－</button></div>
+      <button class="locate on" id="locate" aria-label="跟隨列車"><svg width="22" height="22"><use href="#i-loc"/></svg></button>
+      <div class="card" id="card"></div>
+    </div>
+  </section>
+
+  <section class="screen" id="scrTable" hidden>
+    <header class="top">
+      <button class="circ" id="backBtn" aria-label="回到地圖"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="grow"><h1>時刻表</h1><p id="todayTxt"></p></div>
+    </header>
+    <div class="scroll">
+      <div class="banner" id="banner"></div>
+      <div class="route">
+        <button class="stn" id="fromBtn"><small>出發</small><b id="fromName">桃園</b></button>
+        <button class="swap" id="swap" aria-label="交換出發與抵達"><svg width="18" height="18"><use href="#i-swap"/></svg></button>
+        <button class="stn" id="toBtn"><small>抵達</small><b id="toName">松山</b></button>
+      </div>
+      <div class="chips" id="chips"></div>
+      <div class="sect">班次<span id="count"></span></div>
+      <div class="list" id="list"></div>
+      <p class="foot">示範時刻表，非台鐵官方資料，範圍基隆—新竹。<br>自強號含普悠瑪、太魯閣、自強3000（EMU3000）。<br>列車位置依時刻推算，非即時 GPS。</p>
+    </div>
+  </section>
+
+  <nav class="tabbar">
+    <button data-go="live" aria-current="true"><svg width="22" height="22"><use href="#i-map"/></svg>列車位置</button>
+    <button data-go="table" aria-current="false"><svg width="22" height="22"><use href="#i-list"/></svg>時刻表</button>
+  </nav>
+
+  <div class="overlay" id="overlay"><div class="sheet" role="dialog" aria-modal="true"><div class="grab" style="margin-top:10px"></div><h3 id="pickTitle">選擇出發站</h3><div class="plist" id="plist"></div></div></div>
+
+  <div class="splash" id="splash" hidden>
+    <svg viewBox="0 0 400 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <radialGradient id="g1" cx="40%" cy="40%" r="70%"><stop offset="0" stop-color="#e9eefc"/><stop offset=".55" stop-color="#8e9ab9"/><stop offset="1" stop-color="#1b2140"/></radialGradient>
+        <radialGradient id="g2" cx="50%" cy="50%" r="55%"><stop offset="0" stop-color="#3a5cff" stop-opacity=".9"/><stop offset="1" stop-color="#3a5cff" stop-opacity="0"/></radialGradient>
+        <pattern id="dp" width="9" height="9" patternUnits="userSpaceOnUse"><circle cx="4.5" cy="4.5" r="1.6" fill="#6f8cff"/></pattern>
+        <linearGradient id="fadeb" x1="0" y1="0" x2="0" y2="1"><stop offset=".55" stop-color="#03050d" stop-opacity="0"/><stop offset="1" stop-color="#03050d"/></linearGradient>
+        <mask id="m"><rect width="400" height="420" fill="black"/><circle cx="290" cy="210" r="140" fill="white"/><circle cx="250" cy="210" r="120" fill="black"/></mask>
+      </defs>
+      <circle cx="120" cy="190" r="230" fill="url(#g1)" opacity=".85"/>
+      <circle cx="120" cy="190" r="170" fill="#0b0f22" opacity=".55"/>
+      <circle cx="120" cy="190" r="150" fill="url(#g1)" opacity=".6"/>
+      <circle cx="40" cy="200" r="90" fill="url(#g2)"/>
+      <path d="M40 140a60 60 0 0 1 0 120" fill="none" stroke="#4d73ff" stroke-width="22" stroke-linecap="round" opacity=".9"/>
+      <rect width="400" height="420" fill="url(#dp)" mask="url(#m)" opacity=".9"/>
+      <circle cx="290" cy="210" r="140" fill="none" stroke="#c9d3f5" stroke-opacity=".35" stroke-width="2"/>
+      <rect width="400" height="420" fill="url(#fadeb)"/>
+    </svg>
+    <div class="txt">
+      <h2>列車在哪裡，<br>一眼就知道</h2>
+      <p>選好出發站和抵達站，就能在地圖上看到<b>列車目前的位置</b>，還有<b>幾分鐘後到站</b>。</p>
+      <div class="dots"><i></i><i></i><i></i></div>
+      <button class="start" id="startBtn">開始使用</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---------- 路線資料（基隆—新竹，示範） ----------
+const ST=[
+  ["基隆",25.132,121.739,0],["三坑",25.123,121.742,3],["八堵",25.108,121.729,6],["七堵",25.093,121.714,10],
+  ["百福",25.077,121.694,13],["五堵",25.072,121.668,16],["汐止",25.068,121.656,19],["汐科",25.062,121.646,22],
+  ["南港",25.053,121.607,28],["松山",25.049,121.578,33],["台北",25.048,121.517,39],["萬華",25.033,121.500,45],
+  ["板橋",25.014,121.464,50],["浮洲",25.004,121.445,54],["樹林",24.991,121.425,58],["南樹林",24.981,121.414,61],
+  ["山佳",24.973,121.392,65],["鶯歌",24.954,121.355,70],["鳳鳴",24.966,121.334,73],["桃園",24.989,121.314,78],
+  ["內壢",24.973,121.258,84],["中壢",24.954,121.226,89],["埔心",24.919,121.184,95],["楊梅",24.914,121.146,100],
+  ["富岡",24.935,121.083,107],["新富",24.931,121.065,110],["北湖",24.917,121.052,113],["湖口",24.903,121.044,117],
+  ["新豐",24.869,120.997,123],["竹北",24.839,121.009,129],["北新竹",24.809,120.990,132],["新竹",24.802,120.972,136]];
+const NAMES=ST.map(s=>s[0]),idx=n=>NAMES.indexOf(n),cum=i=>ST[i][3];
+const MAJOR=new Set(["基隆","七堵","南港","松山","台北","板橋","樹林","鶯歌","桃園","中壢","楊梅","湖口","竹北","新竹"]);
+const TYPES={"自強":{f:.68,dw:1,rate:2.27,c:"#2f63ff"},"莒光":{f:.78,dw:1,rate:1.75,c:"#e0883a"},"區間快":{f:.85,dw:.7,rate:1.46,c:"#8a5cff"},"區間":{f:1,dw:.5,rate:1.46,c:"#1aa7b3"}};
+const trains=[];
+const SUBS=["自強3000","普悠瑪","自強","太魯閣"];let subI=0;
+function mk(type,no,dir,start,stops){
+  let st=stops.map(idx).sort((a,b)=>a-b);if(dir<0)st.reverse();
+  const {f,dw}=TYPES[type];let t=start,prev=null;const pts=[];
+  st.forEach((i,k)=>{if(k>0)t+=Math.abs(cum(i)-cum(prev))*f;const arr=t,dep=(k===0||k===st.length-1)?t:t+dw;pts.push({i,arr,dep});t=dep;prev=i});
+  const label=type==="自強"?SUBS[subI++%SUBS.length]:type==="莒光"?"莒光號":type;
+  trains.push({type,label,no:String(no),dir,pts,org:NAMES[st[0]],dest:NAMES[st[st.length-1]]});
+}
+const EXP=["七堵","南港","松山","台北","板橋","桃園","中壢","新竹"];
+const SEMI=["基隆","七堵","汐止","南港","松山","台北","萬華","板橋","樹林","鶯歌","桃園","內壢","中壢","埔心","楊梅","湖口","竹北","新竹"];
+let n;
+n=1101;for(let m=320;m<=1380;m+=20){mk("區間",n,1,m,NAMES);n+=2}
+n=1102;for(let m=305;m<=1380;m+=20){mk("區間",n,-1,m,NAMES);n+=2}
+n=4001;for(let m=370;m<=1270;m+=60){mk("區間快",n,1,m,SEMI);n+=2}
+n=4002;for(let m=400;m<=1300;m+=60){mk("區間快",n,-1,m,SEMI);n+=2}
+const CHU=["基隆","七堵","汐止","南港","松山","台北","萬華","板橋","樹林","鶯歌","桃園","中壢","楊梅","新竹"];
+n=501;for(let m=430;m<=1270;m+=120){mk("莒光",n,1,m,CHU);n+=2}
+n=502;for(let m=410;m<=1250;m+=120){mk("莒光",n,-1,m,CHU);n+=2}
+n=101;for(let m=360;m<=1320;m+=30){mk("自強",n,1,m,EXP);n+=2}
+n=102;for(let m=350;m<=1310;m+=30){mk("自強",n,-1,m,EXP);n+=2}
+
+// ---------- 工具 ----------
+const $=id=>document.getElementById(id);
+const nowMin=()=>{const d=Date.now()/60000+480;return((d%1440)+1440)%1440};
+const pad=x=>String(x).padStart(2,"0");
+const fmt=m=>{const r=Math.round(m);return pad(Math.floor(r/60)%24)+":"+pad(r%60)};
+const fare=(tr,a,b)=>Math.max(15,Math.round(Math.abs(cum(a)-cum(b))*.7*TYPES[tr.type].rate));
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const FONT="Nunito,'Noto Sans TC',sans-serif";
+
+let from="桃園",to="松山",screen="live",selNo=null,follow=true,filter="全部",showAll=false;
+try{const s=JSON.parse(store.get("gl-route")||"null");if(s&&NAMES.includes(s.f)&&NAMES.includes(s.t)&&s.f!==s.t){from=s.f;to=s.t}}catch(e){}
+
+function stateAt(tr,now){
+  const p=tr.pts;if(now<p[0].dep||now>p[p.length-1].arr)return null;
+  for(let k=0;k<p.length;k++){
+    if(now>=p[k].arr&&now<=p[k].dep)return{c:cum(p[k].i),at:p[k].i,next:p[k+1]?p[k+1].i:null};
+    if(k<p.length-1&&now>p[k].dep&&now<p[k+1].arr){const fr=(now-p[k].dep)/(p[k+1].arr-p[k].dep),a=cum(p[k].i),b=cum(p[k+1].i);return{c:a+(b-a)*fr,at:null,prev:p[k].i,next:p[k+1].i}}
+  }return null;
+}
+function myTrains(){
+  const a=idx(from),b=idx(to),dir=b>a?1:-1,out=[];
+  for(const tr of trains){if(tr.dir!==dir)continue;const ka=tr.pts.findIndex(p=>p.i===a),kb=tr.pts.findIndex(p=>p.i===b);
+    if(ka>=0&&kb>=0)out.push({tr,pa:tr.pts[ka],pb:tr.pts[kb],stops:kb-ka-1,dur:tr.pts[kb].arr-tr.pts[ka].dep,fare:fare(tr,a,b)})}
+  return out.sort((x,y)=>x.pa.dep-y.pa.dep);
+}
+const upcoming=()=>{const now=nowMin();return myTrains().filter(m=>m.pa.dep>=now-.2)};
+const usable=new Set();const refreshUsable=()=>{usable.clear();myTrains().forEach(m=>usable.add(m.tr.no))};
+
+// ---------- 地圖 ----------
+const cv=$("map"),ctx=cv.getContext("2d"),box=$("mapbox");
+const wx=lon=>(lon-120.95)*906,wy=lat=>(25.16-lat)*1000;
+const fracPos=c=>{for(let j=0;j<ST.length-1;j++)if(c>=cum(j)&&c<=cum(j+1)){const f=(c-cum(j))/(cum(j+1)-cum(j));return[wx(ST[j][2]+(ST[j+1][2]-ST[j][2])*f),wy(ST[j][1]+(ST[j+1][1]-ST[j][1])*f)]}const s=ST[ST.length-1];return[wx(s[2]),wy(s[1])]};
+// 裝飾用街道紋理（非真實地圖）
+let seed=11;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+const roads=[[],[],[]];
+ST.forEach(st=>{const cx=wx(st[2]),cy=wy(st[1]),maj=MAJOR.has(st[0]),R=maj?36:20,step=maj?4.4:5.4,ang=rnd()*.9-.45,ca=Math.cos(ang),sa=Math.sin(ang);
+  for(let fam=0;fam<2;fam++)for(let t=-R;t<=R;t+=step*(.75+rnd()*.5)){
+    let u=-Math.sqrt(R*R-t*t);const end=-u;
+    const P=uu=>fam?[cx-sa*uu+ca*t,cy+ca*uu+sa*t]:[cx+ca*uu-sa*t,cy+sa*uu+ca*t];
+    while(u<end){const u2=Math.min(end,u+3+rnd()*11);if(rnd()>.2)roads[rnd()<.06?1:0].push([P(u),P(u2)]);u=u2+(rnd()<.2?1.5:0)}
+  }});
+const MJ=[...MAJOR].map(idx).sort((x,y)=>x-y);
+for(let k=0;k<MJ.length-1;k++){const A=ST[MJ[k]],B=ST[MJ[k+1]];let p=[wx(A[2]),wy(A[1])];const q=[wx(B[2]),wy(B[1])];
+  for(let j=1;j<=4;j++){const f=j/4,n=[p[0]+(q[0]-p[0])/(5-j)+(rnd()-.5)*6,p[1]+(q[1]-p[1])/(5-j)+(rnd()-.5)*6+(j<4?7:0)];if(j===4){n[0]=q[0]+(rnd()-.5)*8;n[1]=q[1]+9}roads[2].push([p,n]);p=n}}
+const RIVERS=[[[121.41,25.18],[121.45,25.12],[121.49,25.08],[121.505,25.04],[121.48,25.01],[121.44,24.98],[121.39,24.95],[121.34,24.92],[121.29,24.88]],
+  [[121.14,24.78],[121.08,24.80],[121.02,24.81],[120.96,24.84],[120.92,24.86]],[[121.74,25.05],[121.68,25.06],[121.62,25.065],[121.57,25.07],[121.52,25.07],[121.49,25.08]]]
+  .map(r=>r.map(([lo,la])=>[wx(lo),wy(la)]));
+const AREAS=[["基隆市",121.70,25.15],["台北市",121.55,25.09],["新北市",121.42,25.04],["桃園市",121.27,25.02],["新竹縣",121.06,24.87],["新竹市",120.94,24.78]];
+
+let W=0,H=0,view={cx:300,cy:150,s:2},target=null,cardH=0;
+function resize(){const r=box.getBoundingClientRect(),d=devicePixelRatio||1;W=r.width;H=r.height;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);cardH=$("card").offsetHeight+24;$("locate").style.bottom=(cardH+4)+"px"}
+const sx=x=>(x-view.cx)*view.s+W/2,sy=y=>(y-view.cy)*view.s+(H-cardH)/2;
+function fitRoute(instant){
+  const a=idx(from),b=idx(to);let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
+  for(let i=Math.min(a,b);i<=Math.max(a,b);i++){const x=wx(ST[i][2]),y=wy(ST[i][1]);x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y)}
+  const s=Math.min((W-90)/Math.max(x1-x0,20),(H-cardH-110)/Math.max(y1-y0,20),9);
+  const t={cx:(x0+x1)/2,cy:(y0+y1)/2,s:Math.max(s,.5),fit:true};if(instant)view={...t};else target=t;
+}
+const rr=(x,y,w,h,r)=>{ctx.beginPath();if(ctx.roundRect)ctx.roundRect(x,y,w,h,r);else ctx.rect(x,y,w,h)};
+function label(x,y,t,strong){ctx.font=`800 ${strong?13:12}px ${FONT}`;const w=ctx.measureText(t).width+18;rr(x-w/2,y-12,w,24,9);ctx.fillStyle=strong?"#2f63ff":"rgba(10,16,40,.88)";ctx.fill();ctx.strokeStyle="rgba(140,170,255,.45)";ctx.lineWidth=1;ctx.stroke();ctx.fillStyle="#fff";ctx.textAlign="center";ctx.fillText(t,x,y+4.5)}
+let hits=[];
+function draw(){
+  const now=nowMin(),tt=performance.now()/1000;
+  const sel=trains.find(t=>t.no===selNo),sst=sel&&stateAt(sel,now);
+  if(follow&&sst){const[x,y]=fracPos(sst.c);target={cx:x,cy:y,s:(target||view).s}}
+  if(target){const k=.1;view.cx+=(target.cx-view.cx)*k;view.cy+=(target.cy-view.cy)*k;view.s+=(target.s-view.s)*k;if(!follow&&Math.abs(target.s-view.s)<.002&&Math.abs(target.cx-view.cx)<.05)target=null}
+  ctx.fillStyle="#0a1024";ctx.fillRect(0,0,W,H);
+  ctx.lineCap="round";ctx.lineJoin="round";
+  // 河流
+  for(const r of RIVERS){ctx.beginPath();r.forEach((p,i)=>i?ctx.lineTo(sx(p[0]),sy(p[1])):ctx.moveTo(sx(p[0]),sy(p[1])));ctx.strokeStyle="rgba(40,80,190,.22)";ctx.lineWidth=Math.max(3,view.s*2.2);ctx.stroke()}
+  const segs=(arr,col,w)=>{ctx.beginPath();for(const[p,q]of arr){const x1=sx(p[0]),y1=sy(p[1]),x2=sx(q[0]),y2=sy(q[1]);if((x1<-20&&x2<-20)||(x1>W+20&&x2>W+20)||(y1<-20&&y2<-20)||(y1>H+20&&y2>H+20))continue;ctx.moveTo(x1,y1);ctx.lineTo(x2,y2)}ctx.strokeStyle=col;ctx.lineWidth=w;ctx.stroke()};
+  if(view.s>1)segs(roads[0],`rgba(125,145,215,${Math.min(.2,.07+view.s*.02)})`,Math.min(.6+view.s*.12,1.6));
+  segs(roads[1],"rgba(130,150,225,.22)",Math.min(1+view.s*.2,2.6));
+  segs(roads[2],"rgba(140,160,235,.14)",Math.min(1.6+view.s*.3,4));
+  ctx.font=`800 11px ${FONT}`;ctx.textAlign="center";ctx.fillStyle="rgba(150,165,220,.32)";
+  AREAS.forEach(([t,lo,la])=>ctx.fillText(t.split("").join(" "),sx(wx(lo)),sy(wy(la))));
+  const P=ST.map(s=>[sx(wx(s[2])),sy(wy(s[1]))]);
+  const path=(a,b)=>{ctx.beginPath();for(let i=a;i<=b;i++)i===a?ctx.moveTo(...P[i]):ctx.lineTo(...P[i])};
+  path(0,ST.length-1);ctx.strokeStyle="#1d2c62";ctx.lineWidth=4;ctx.stroke();
+  const a=idx(from),b=idx(to),lo=Math.min(a,b),hi=Math.max(a,b);
+  path(lo,hi);ctx.strokeStyle="#2f63ff";ctx.lineWidth=6;ctx.shadowColor="#3d7bff";ctx.shadowBlur=20;ctx.stroke();ctx.shadowBlur=0;
+  path(lo,hi);ctx.strokeStyle="#a9c1ff";ctx.lineWidth=1.6;ctx.stroke();
+  ST.forEach((s,i)=>{const[x,y]=P[i];if(x<-50||x>W+50||y<-30||y>H+30)return;const key=i===a||i===b,inn=i>=lo&&i<=hi,maj=MAJOR.has(s[0]);if(key)return;
+    ctx.beginPath();ctx.arc(x,y,maj?3.5:2.5,0,7);ctx.fillStyle=inn?"#d6e1ff":"#3a4a85";ctx.fill();
+    if(maj&&view.s>1.4||view.s>4.5){ctx.font=`${inn?800:600} 11px ${FONT}`;ctx.fillStyle=inn?"rgba(225,233,255,.9)":"rgba(140,155,210,.55)";ctx.textAlign="left";ctx.fillText(s[0],x+7,y+4)}});
+  {const[x,y]=P[b];ctx.beginPath();ctx.arc(x,y,11,0,7);ctx.fillStyle="rgba(91,134,255,.25)";ctx.fill();ctx.beginPath();ctx.arc(x,y,5.5,0,7);ctx.fillStyle="#e0e8ff";ctx.fill();label(x,y+26,"抵達 "+to)}
+  {const[x,y]=P[a];ctx.beginPath();ctx.arc(x,y-17,13,0,7);ctx.moveTo(x-8,y-9);ctx.lineTo(x,y);ctx.lineTo(x+8,y-9);ctx.fillStyle="#5b86ff";ctx.shadowColor="#5b86ff";ctx.shadowBlur=16;ctx.fill();ctx.shadowBlur=0;ctx.beginPath();ctx.arc(x,y-17,5,0,7);ctx.fillStyle="#0a1024";ctx.fill();label(x,y-42,"出發 "+from)}
+  hits=[];const dir=idx(to)>idx(from)?1:-1;let selXY=null;
+  for(const tr of trains){const st=stateAt(tr,now);if(!st)continue;const[px,py]=fracPos(st.c),x=sx(px),y=sy(py);
+    if(x<-30||x>W+30||y<-30||y>H+30)continue;hits.push({no:tr.no,x,y});
+    if(tr.no===selNo){selXY={x,y,tr};continue}
+    const mine=usable.has(tr.no),same=tr.dir===dir;
+    ctx.beginPath();ctx.arc(x,y,mine?7:4,0,7);ctx.fillStyle=mine?"#2f63ff":same?"#4a5584":"#2c3560";ctx.fill();
+    if(mine){ctx.lineWidth=2;ctx.strokeStyle="#d6e1ff";ctx.stroke()}}
+  if(selXY){const{x,y,tr}=selXY,p=(tt*.8)%1;
+    ctx.beginPath();ctx.arc(x,y,18+p*26,0,7);ctx.fillStyle=`rgba(91,134,255,${.4*(1-p)})`;ctx.fill();
+    ctx.beginPath();ctx.arc(x,y,18,0,7);ctx.fillStyle="#2f63ff";ctx.shadowColor="#4d82ff";ctx.shadowBlur=24;ctx.fill();ctx.shadowBlur=0;ctx.lineWidth=2.5;ctx.strokeStyle="#fff";ctx.stroke();
+    ctx.fillStyle="#fff";rr(x-7,y-9,14,14,4);ctx.fill();
+    ctx.fillStyle="#2f63ff";ctx.fillRect(x-5,y-7,10,5);ctx.beginPath();ctx.arc(x-3.6,y+1.6,1.5,0,7);ctx.arc(x+3.6,y+1.6,1.5,0,7);ctx.fill();
+    ctx.strokeStyle="#fff";ctx.lineWidth=1.8;ctx.beginPath();ctx.moveTo(x-4,y+6);ctx.lineTo(x-6.5,y+10);ctx.moveTo(x+4,y+6);ctx.lineTo(x+6.5,y+10);ctx.stroke();
+    label(x,y-36,tr.label+" "+tr.no,true)}
+  requestAnimationFrame(draw);
+}
+const ptr=new Map();let moved=false,pinch=null;
+cv.addEventListener("pointerdown",e=>{cv.setPointerCapture(e.pointerId);ptr.set(e.pointerId,{x:e.clientX,y:e.clientY});moved=false;if(ptr.size===2){const[p,q]=[...ptr.values()];pinch={d:Math.hypot(p.x-q.x,p.y-q.y),s:view.s}}});
+cv.addEventListener("pointermove",e=>{const p=ptr.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;if(Math.abs(dx)+Math.abs(dy)>3)moved=true;
+  if(ptr.size===1&&moved){view.cx-=dx/view.s;view.cy-=dy/view.s;target=null;setFollow(false)}p.x=e.clientX;p.y=e.clientY;
+  if(ptr.size===2&&pinch){const[a,b]=[...ptr.values()];view.s=Math.min(Math.max(pinch.s*Math.hypot(a.x-b.x,a.y-b.y)/pinch.d,.5),16);if(target)target.s=view.s}});
+const up=e=>{if(!moved&&ptr.size===1){const r=cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;let best=null,bd=26;hits.forEach(h=>{const d=Math.hypot(h.x-x,h.y-y);if(d<bd){bd=d;best=h}});if(best){selNo=best.no;setFollow(true);renderCard()}}ptr.delete(e.pointerId);if(ptr.size<2)pinch=null};
+cv.addEventListener("pointerup",up);cv.addEventListener("pointercancel",up);
+cv.addEventListener("wheel",e=>{e.preventDefault();view.s=Math.min(Math.max(view.s*(e.deltaY<0?1.12:.89),.5),16);if(target)target.s=view.s},{passive:false});
+const zoom=f=>{const s=Math.min(Math.max(view.s*f,.5),16),b=target||view;target={cx:b.cx,cy:b.cy,s,fit:true}};
+$("zin").onclick=()=>zoom(1.6);$("zout").onclick=()=>zoom(1/1.6);
+function setFollow(v){follow=v;$("locate").classList.toggle("on",v);if(!v&&target&&!target.fit)target=null}
+$("locate").onclick=()=>setFollow(!follow);
+
+// ---------- 地圖卡片 ----------
+function renderCard(){
+  const now=nowMin(),list=upcoming();
+  if(!selNo||!trains.some(t=>t.no===selNo&&(stateAt(t,now)||t.pts[0].dep>now)))selNo=list[0]?list[0].tr.no:null;
+  const tr=trains.find(t=>t.no===selNo);
+  if(!tr){$("card").innerHTML=`<div class="grab"></div><div class="empty">今天往${to}的班次已經結束</div>`;resize();return}
+  const st=stateAt(tr,now),pa=tr.pts.find(p=>p.i===idx(from)),pb=tr.pts.find(p=>p.i===idx(to));
+  let badge,where;
+  if(!st){badge=`<span class="state wait">● 未發車</span>`;where=`${fmt(tr.pts[0].dep)} ${tr.org}發車`}
+  else if(st.at!==null){badge=`<span class="state stop">● 停靠中</span>`;where=`停靠 ${NAMES[st.at]}`}
+  else{badge=`<span class="state">● 行駛中</span>`;where=`${NAMES[st.prev]} → ${NAMES[st.next]}`}
+  let s1="—",s2="—";
+  if(pa){const m=pa.arr-now;s1=m>.5?`${Math.ceil(m)} 分後`:now<pa.arr?"即將進站":now<=pa.dep?"停靠中":"已駛離"}
+  if(pb)s2=pb.arr>now?fmt(pb.arr):"已到站";
+  const k=list.findIndex(m=>m.tr.no===selNo);
+  $("card").innerHTML=`<div class="grab"></div>
+    <div class="chead"><div class="tile" style="--c:${TYPES[tr.type].c}"><svg width="22" height="22"><use href="#i-train"/></svg></div>
+      <div style="min-width:0"><h2>${tr.label} ${tr.no}</h2><p>@往${tr.dest}・${from} ${pa?fmt(pa.dep):""} 開</p></div>${badge}</div>
+    <div class="stats"><div><small>目前位置</small><b>${where}</b></div><div><small>抵達${from}</small><b class="hl">${s1}</b></div><div><small>抵達${to}</small><b>${s2}</b></div></div>
+    <div class="btns"><button class="btn line" id="prevT" ${k<=0?"disabled":""}>‹ 前一班</button><button class="btn blue" id="nextT" ${k<0||k>=list.length-1?"disabled":""}>下一班 ›</button></div>`;
+  $("prevT").onclick=()=>{selNo=list[k-1].tr.no;setFollow(true);renderCard()};
+  $("nextT").onclick=()=>{selNo=list[k+1].tr.no;setFollow(true);renderCard()};
+  if(Math.abs($("card").offsetHeight+24-cardH)>2)resize();
+}
+
+// ---------- 時刻表 ----------
+const CHIPS=[["全部","全","#2f63ff"],["自強","自","#2f63ff"],["莒光","莒","#e0883a"],["區間快","快","#8a5cff"],["區間","區","#1aa7b3"]];
+function renderTable(){
+  const now=nowMin(),d=new Date(Date.now()+480*6e4);
+  $("todayTxt").textContent=`${d.getUTCMonth()+1}月${d.getUTCDate()}日 星期${"日一二三四五六"[d.getUTCDay()]}`;
+  $("fromName").textContent=from;$("toName").textContent=to;
+  $("chips").innerHTML=CHIPS.map(([t,s,c])=>`<button class="chip" aria-pressed="${filter===t}" data-f="${t}" style="--c:${c}"><i>${s}</i>${t}</button>`).join("");
+  const all=upcoming(),list=all.filter(m=>filter==="全部"||m.tr.type===filter),nx=all[0];
+  $("banner").innerHTML=nx?`<h3>下一班 ${Math.max(0,Math.ceil(nx.pa.dep-now))} 分後發車</h3><p>${nx.tr.label} ${nx.tr.no}，<b>${fmt(nx.pa.dep)}</b> 從${from}出發，${fmt(nx.pb.arr)} 抵達${to}。點任一班次，就能在地圖上看它在哪。</p>`:`<h3>今天的班次已結束</h3><p>${from} → ${to} 今天已經沒有車了。</p>`;
+  $("count").textContent=`今天還有 ${list.length} 班`;
+  const shown=showAll?list:list.slice(0,20);
+  $("list").innerHTML=shown.length?shown.map(m=>{const dd=m.pa.dep-now,cd=dd<1?`<span class="cd soon">即將發車</span>`:dd<60?`<span class="cd${dd<5?" soon":""}">${Math.ceil(dd)} 分後</span>`:"";
+    return `<button class="item${m===nx?" next":""}" data-no="${m.tr.no}">
+      <div class="thumb" style="--c:${TYPES[m.tr.type].c}"><svg width="58" height="58" style="color:var(--c)"><use href="#i-front"/></svg><small>${m.tr.label}</small></div>
+      <div class="info"><h4>${m.tr.label} ${m.tr.no} ${cd}</h4>
+        <div class="times">${fmt(m.pa.dep)}<span>→</span>${fmt(m.pb.arr)}</div>
+        <div class="meta">${Math.round(m.dur)} 分・${m.stops?`停 ${m.stops} 站`:"直達"}・往${m.tr.dest}</div>
+        <div class="row"><span class="price"><sup>$</sup><b>${m.fare}</b><small>全票</small></span><span class="pillbtn"><svg width="15" height="15"><use href="#i-map"/></svg>看位置</span></div></div></button>`}).join("")
+    +(list.length>20&&!showAll?`<button class="more" id="moreBtn">顯示全部 ${list.length} 班</button>`:"")
+    :`<div class="empty">沒有符合的班次</div>`;
+}
+$("chips").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;filter=b.dataset.f;renderTable()});
+$("list").addEventListener("click",e=>{if(e.target.id==="moreBtn"){showAll=true;renderTable();return}const it=e.target.closest(".item");if(!it)return;selNo=it.dataset.no;go("live");setFollow(true);renderCard()});
+
+// ---------- 導覽 ----------
+function go(s){screen=s;$("scrLive").hidden=s!=="live";$("scrTable").hidden=s!=="table";
+  document.querySelectorAll(".tabbar button").forEach(b=>b.setAttribute("aria-current",b.dataset.go===s));
+  if(s==="live"){requestAnimationFrame(()=>{resize();renderCard()})}else renderTable()}
+document.querySelectorAll(".tabbar button").forEach(b=>b.onclick=()=>go(b.dataset.go));
+$("backBtn").onclick=()=>go("live");
+
+let followTimer=null;
+function routeChanged(){
+  store.set("gl-route",JSON.stringify({f:from,t:to}));
+  $("lFrom").textContent=from;$("lTo").textContent=to;
+  refreshUsable();selNo=null;renderCard();renderTable();setFollow(false);fitRoute();
+  clearTimeout(followTimer);followTimer=setTimeout(()=>setFollow(true),1200);
+}
+const swap=()=>{[from,to]=[to,from];routeChanged()};
+let rot=false;
+$("swap").onclick=()=>{rot=!rot;$("swap").classList.toggle("spin",rot);swap()};
+$("liveSwap").onclick=swap;
+
+let picking=null;
+function openPicker(w){picking=w;$("pickTitle").textContent=w==="from"?"選擇出發站":"選擇抵達站";
+  const cur=w==="from"?from:to,other=w==="from"?to:from;
+  $("plist").innerHTML=NAMES.map(n=>`<button class="${n===cur?"cur":n===other?"other":""}" data-n="${n}">${n}</button>`).join("");
+  $("overlay").classList.add("show")}
+$("fromBtn").onclick=()=>openPicker("from");$("toBtn").onclick=()=>openPicker("to");
+let chain=false;
+$("liveRoute").onclick=()=>{chain=true;openPicker("from")};
+$("overlay").addEventListener("click",e=>{const b=e.target.closest("button[data-n]");
+  if(b){const v=b.dataset.n,was=picking;if(was==="from"){if(v===to)to=from;from=v}else{if(v===from)from=to;to=v}
+    $("overlay").classList.remove("show");routeChanged();
+    if(chain&&was==="from")setTimeout(()=>openPicker("to"),380);else chain=false;return}
+  if(e.target.id==="overlay"){chain=false;$("overlay").classList.remove("show")}});
+
+// ---------- 開場 ----------
+if(!store.get("gl-onboarded"))$("splash").hidden=false;
+$("startBtn").onclick=()=>{store.set("gl-onboarded","1");$("splash").classList.add("out");setTimeout(()=>$("splash").hidden=true,460)};
+
+// ---------- 啟動 ----------
+$("lFrom").textContent=from;$("lTo").textContent=to;
+refreshUsable();renderCard();resize();fitRoute(true);
+new ResizeObserver(resize).observe(box);
+setInterval(()=>{if(screen==="live")renderCard();else renderTable()},5000);
+requestAnimationFrame(draw);
+</script>
+
+</body></html>
