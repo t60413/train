@@ -148,7 +148,30 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 .plist button.other{opacity:.4}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
-
+<style>
+.circ.r{margin-left:auto}
+.mode{display:inline-flex;align-items:center;gap:5px;margin-left:8px;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.18);color:#fff;vertical-align:2px}
+.mode i{width:6px;height:6px;border-radius:50%;background:#ffd27a}
+.mode.on i{background:var(--ok);box-shadow:0 0 6px var(--ok)}
+.dly{font-size:12px;font-weight:800;padding:3px 8px;border-radius:8px;background:rgba(79,227,161,.14);color:var(--ok);white-space:nowrap}
+.dly.late{background:rgba(255,107,125,.16);color:var(--red)}
+.stats b.ok{color:var(--ok)} .stats b.late{color:var(--red)}
+.search{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--stroke);background:rgba(0,0,0,.25);color:var(--fg);font:inherit;font-size:16px;margin:0 0 12px}
+.search::placeholder{color:var(--dim)}
+.psub{grid-column:1/-1;font-size:12px;font-weight:800;color:var(--muted);margin:6px 2px 0}
+.form{display:flex;flex-direction:column;gap:12px;padding:0 18px 20px}
+.form label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:var(--muted)}
+.form input{padding:12px 14px;border-radius:12px;border:1px solid var(--stroke);background:rgba(0,0,0,.25);color:var(--fg);font:inherit;font-size:15px}
+.hint{margin:0;font-size:12px;color:var(--muted);line-height:1.6}
+.msg{margin:0;font-size:13px;font-weight:700;min-height:18px}
+.msg.err{color:var(--red)} .msg.ok{color:var(--ok)}
+.toast{position:absolute;left:16px;right:16px;top:calc(12px + env(safe-area-inset-top,0px));z-index:50;padding:12px 14px;border-radius:14px;background:rgba(20,28,70,.95);border:1px solid var(--stroke);font-size:13px;font-weight:700;opacity:0;transform:translateY(-10px);transition:all .3s;pointer-events:none}
+.toast.show{opacity:1;transform:none}
+.loading{display:flex;align-items:center;justify-content:center;gap:10px;padding:30px 0;color:var(--muted);font-size:14px}
+.spin{width:18px;height:18px;border-radius:50%;border:2.5px solid var(--stroke);border-top-color:var(--blue-hi);animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.banner .act{margin-top:10px;display:inline-flex;padding:8px 14px;border-radius:10px;background:var(--blue);font-size:13px;font-weight:800}
+</style>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="i-train" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2c-4 0-8 .5-8 4v9.5A3.5 3.5 0 0 0 7.5 19L6 20.5v.5h2.2l2-2h3.6l2 2H18v-.5L16.5 19a3.5 3.5 0 0 0 3.5-3.5V6c0-3.5-4-4-8-4zM7.5 17a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3.5-7H6V6h5v4zm2 0V6h5v4h-5zm3.5 7a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></symbol>
   <linearGradient id="gBody" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#d7dcea"/><stop offset="1" stop-color="#7d86a3"/></linearGradient>
@@ -169,7 +192,6 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
   <symbol id="i-swap" viewBox="0 0 24 24"><path d="M7 4v16M3 8l4-4 4 4M17 20V4M13 16l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="i-loc" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></g></symbol>
 </svg>
-
 <div class="amb"></div>
 <div class="app" id="app">
 
@@ -177,9 +199,10 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
     <header class="top">
       <button class="circ" id="liveSwap" aria-label="交換方向"><svg width="18" height="18"><use href="#i-swap"/></svg></button>
       <div class="grow">
-        <h1>列車位置</h1>
+        <h1>列車位置<span class="mode" id="modeTag"><i></i>示範</span></h1>
         <button class="routepill" id="liveRoute"><b id="lFrom">桃園</b><span>→</span><b id="lTo">松山</b><svg width="12" height="12" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></button>
       </div>
+      <button class="circ r" data-set aria-label="設定"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg></button>
     </header>
     <div class="mapbox" id="mapbox">
       <canvas id="map" aria-label="列車位置地圖"></canvas>
@@ -193,6 +216,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
     <header class="top">
       <button class="circ" id="backBtn" aria-label="回到地圖"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       <div class="grow"><h1>時刻表</h1><p id="todayTxt"></p></div>
+      <button class="circ r" data-set aria-label="設定"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg></button>
     </header>
     <div class="scroll">
       <div class="banner" id="banner"></div>
@@ -204,7 +228,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
       <div class="chips" id="chips"></div>
       <div class="sect">班次<span id="count"></span></div>
       <div class="list" id="list"></div>
-      <p class="foot">示範時刻表，非台鐵官方資料，範圍基隆—新竹。<br>自強號含普悠瑪、太魯閣、自強3000（EMU3000）。<br>列車位置依時刻推算，非即時 GPS。</p>
+      <p class="foot" id="foot"></p>
     </div>
   </section>
 
@@ -213,7 +237,21 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
     <button data-go="table" aria-current="false"><svg width="22" height="22"><use href="#i-list"/></svg>時刻表</button>
   </nav>
 
-  <div class="overlay" id="overlay"><div class="sheet" role="dialog" aria-modal="true"><div class="grab" style="margin-top:10px"></div><h3 id="pickTitle">選擇出發站</h3><div class="plist" id="plist"></div></div></div>
+  <div class="overlay" id="overlay"><div class="sheet" role="dialog" aria-modal="true"><div class="grab" style="margin-top:10px"></div><h3 id="pickTitle">選擇出發站</h3>
+    <div style="padding:0 16px"><input class="search" id="pSearch" placeholder="搜尋車站，例如：台中" autocomplete="off"></div>
+    <div class="plist" id="plist"></div></div></div>
+
+  <div class="overlay" id="setOv"><div class="sheet" role="dialog" aria-modal="true"><div class="grab" style="margin-top:10px"></div><h3>TDX 金鑰設定</h3>
+    <div class="form">
+      <label>Client Id<input id="kId" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"></label>
+      <label>Client Secret<input id="kSec" type="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"></label>
+      <p class="hint">金鑰只會存在這台裝置上，不會上傳到 GitHub 或任何地方。</p>
+      <p class="msg" id="kMsg"></p>
+      <button class="start" id="kSave" style="margin:0">儲存並連線</button>
+      <button class="more" id="kClear">清除金鑰，改用示範模式</button>
+    </div></div></div>
+
+  <div class="toast" id="toast"></div>
 
   <div class="splash" id="splash" hidden>
     <svg viewBox="0 0 400 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -243,248 +281,377 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 </div>
 
 <script>
-// ---------- 路線資料（基隆—新竹，示範） ----------
-const ST=[
-  ["基隆",25.132,121.739,0],["三坑",25.123,121.742,3],["八堵",25.108,121.729,6],["七堵",25.093,121.714,10],
-  ["百福",25.077,121.694,13],["五堵",25.072,121.668,16],["汐止",25.068,121.656,19],["汐科",25.062,121.646,22],
-  ["南港",25.053,121.607,28],["松山",25.049,121.578,33],["台北",25.048,121.517,39],["萬華",25.033,121.500,45],
-  ["板橋",25.014,121.464,50],["浮洲",25.004,121.445,54],["樹林",24.991,121.425,58],["南樹林",24.981,121.414,61],
-  ["山佳",24.973,121.392,65],["鶯歌",24.954,121.355,70],["鳳鳴",24.966,121.334,73],["桃園",24.989,121.314,78],
-  ["內壢",24.973,121.258,84],["中壢",24.954,121.226,89],["埔心",24.919,121.184,95],["楊梅",24.914,121.146,100],
-  ["富岡",24.935,121.083,107],["新富",24.931,121.065,110],["北湖",24.917,121.052,113],["湖口",24.903,121.044,117],
-  ["新豐",24.869,120.997,123],["竹北",24.839,121.009,129],["北新竹",24.809,120.990,132],["新竹",24.802,120.972,136]];
-const NAMES=ST.map(s=>s[0]),idx=n=>NAMES.indexOf(n),cum=i=>ST[i][3];
-const MAJOR=new Set(["基隆","七堵","南港","松山","台北","板橋","樹林","鶯歌","桃園","中壢","楊梅","湖口","竹北","新竹"]);
-const TYPES={"自強":{f:.68,dw:1,rate:2.27,c:"#2f63ff"},"莒光":{f:.78,dw:1,rate:1.75,c:"#e0883a"},"區間快":{f:.85,dw:.7,rate:1.46,c:"#8a5cff"},"區間":{f:1,dw:.5,rate:1.46,c:"#1aa7b3"}};
-const trains=[];
-const SUBS=["自強3000","普悠瑪","自強","太魯閣"];let subI=0;
-function mk(type,no,dir,start,stops){
-  let st=stops.map(idx).sort((a,b)=>a-b);if(dir<0)st.reverse();
-  const {f,dw}=TYPES[type];let t=start,prev=null;const pts=[];
-  st.forEach((i,k)=>{if(k>0)t+=Math.abs(cum(i)-cum(prev))*f;const arr=t,dep=(k===0||k===st.length-1)?t:t+dw;pts.push({i,arr,dep});t=dep;prev=i});
-  const label=type==="自強"?SUBS[subI++%SUBS.length]:type==="莒光"?"莒光號":type;
-  trains.push({type,label,no:String(no),dir,pts,org:NAMES[st[0]],dest:NAMES[st[st.length-1]]});
-}
-const EXP=["七堵","南港","松山","台北","板橋","桃園","中壢","新竹"];
-const SEMI=["基隆","七堵","汐止","南港","松山","台北","萬華","板橋","樹林","鶯歌","桃園","內壢","中壢","埔心","楊梅","湖口","竹北","新竹"];
-let n;
-n=1101;for(let m=320;m<=1380;m+=20){mk("區間",n,1,m,NAMES);n+=2}
-n=1102;for(let m=305;m<=1380;m+=20){mk("區間",n,-1,m,NAMES);n+=2}
-n=4001;for(let m=370;m<=1270;m+=60){mk("區間快",n,1,m,SEMI);n+=2}
-n=4002;for(let m=400;m<=1300;m+=60){mk("區間快",n,-1,m,SEMI);n+=2}
-const CHU=["基隆","七堵","汐止","南港","松山","台北","萬華","板橋","樹林","鶯歌","桃園","中壢","楊梅","新竹"];
-n=501;for(let m=430;m<=1270;m+=120){mk("莒光",n,1,m,CHU);n+=2}
-n=502;for(let m=410;m<=1250;m+=120){mk("莒光",n,-1,m,CHU);n+=2}
-n=101;for(let m=360;m<=1320;m+=30){mk("自強",n,1,m,EXP);n+=2}
-n=102;for(let m=350;m<=1310;m+=30){mk("自強",n,-1,m,EXP);n+=2}
-
-// ---------- 工具 ----------
+// ================= 共用工具 =================
 const $=id=>document.getElementById(id);
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+const jget=k=>{try{return JSON.parse(store.get(k)||"null")}catch(e){return null}};
 const nowMin=()=>{const d=Date.now()/60000+480;return((d%1440)+1440)%1440};
 const pad=x=>String(x).padStart(2,"0");
-const fmt=m=>{const r=Math.round(m);return pad(Math.floor(r/60)%24)+":"+pad(r%60)};
-const fare=(tr,a,b)=>Math.max(15,Math.round(Math.abs(cum(a)-cum(b))*.7*TYPES[tr.type].rate));
-const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const fmt=m=>{const r=Math.round(m);return pad(Math.floor(((r%1440)+1440)%1440/60))+":"+pad(((r%60)+60)%60)};
+const tm=s=>{if(!s)return null;const[h,m]=String(s).split(":");return(+h)*60+(+m)};
+const todayStr=()=>{const d=new Date(Date.now()+480*6e4);return `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}`};
+const norm=s=>String(s||"").replace(/台/g,"臺").trim();
 const FONT="Nunito,'Noto Sans TC',sans-serif";
+const TYPES={"自強":{c:"#2f63ff"},"莒光":{c:"#e0883a"},"區間快":{c:"#8a5cff"},"區間":{c:"#1aa7b3"}};
+let toastT;function toast(t){const e=$("toast");e.textContent=t;e.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove("show"),3500)}
 
-let from="桃園",to="松山",screen="live",selNo=null,follow=true,filter="全部",showAll=false;
-try{const s=JSON.parse(store.get("gl-route")||"null");if(s&&NAMES.includes(s.f)&&NAMES.includes(s.t)&&s.f!==s.t){from=s.f;to=s.t}}catch(e){}
-
-function stateAt(tr,now){
-  const p=tr.pts;if(now<p[0].dep||now>p[p.length-1].arr)return null;
-  for(let k=0;k<p.length;k++){
-    if(now>=p[k].arr&&now<=p[k].dep)return{c:cum(p[k].i),at:p[k].i,next:p[k+1]?p[k+1].i:null};
-    if(k<p.length-1&&now>p[k].dep&&now<p[k+1].arr){const fr=(now-p[k].dep)/(p[k+1].arr-p[k].dep),a=cum(p[k].i),b=cum(p[k+1].i);return{c:a+(b-a)*fr,at:null,prev:p[k].i,next:p[k+1].i}}
-  }return null;
+// ================= TDX 連線 =================
+const API="https://tdx.transportdata.tw/api/basic/v3/Rail/TRA/";
+const TOKEN_URL="https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token";
+let keys=jget("gl-keys"),token=null,tokenExp=0;
+async function getToken(force){
+  if(!force&&token&&Date.now()<tokenExp-6e4)return token;
+  const c=jget("gl-token");if(!force&&c&&Date.now()<c.exp-6e4){token=c.t;tokenExp=c.exp;return token}
+  let r;try{r=await fetch(TOKEN_URL,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({grant_type:"client_credentials",client_id:keys.id,client_secret:keys.secret})})}catch(e){throw new Error("連不上 TDX，請確認網路")}
+  if(!r.ok)throw new Error(r.status===400||r.status===401?"金鑰不正確，請檢查 Client Id 和 Secret":"TDX 授權失敗（"+r.status+"）");
+  const j=await r.json();token=j.access_token;tokenExp=Date.now()+(j.expires_in||86400)*1000;store.set("gl-token",JSON.stringify({t:token,exp:tokenExp}));return token;
 }
-function myTrains(){
-  const a=idx(from),b=idx(to),dir=b>a?1:-1,out=[];
-  for(const tr of trains){if(tr.dir!==dir)continue;const ka=tr.pts.findIndex(p=>p.i===a),kb=tr.pts.findIndex(p=>p.i===b);
-    if(ka>=0&&kb>=0)out.push({tr,pa:tr.pts[ka],pb:tr.pts[kb],stops:kb-ka-1,dur:tr.pts[kb].arr-tr.pts[ka].dep,fare:fare(tr,a,b)})}
-  return out.sort((x,y)=>x.pa.dep-y.pa.dep);
+async function api(path,retry){
+  const t=await getToken();
+  let r;try{r=await fetch(API+path+(path.includes("?")?"&":"?")+"%24format=JSON",{headers:{Authorization:"Bearer "+t}})}catch(e){throw new Error("連不上 TDX，請確認網路")}
+  if(r.status===401&&!retry){token=null;store.del("gl-token");await getToken(true);return api(path,true)}
+  if(r.status===429)throw new Error("查詢太頻繁，請等一下再試");
+  if(!r.ok)throw new Error("資料讀取失敗（"+r.status+"）");
+  return r.json();
 }
-const upcoming=()=>{const now=nowMin();return myTrains().filter(m=>m.pa.dep>=now-.2)};
-const usable=new Set();const refreshUsable=()=>{usable.clear();myTrains().forEach(m=>usable.add(m.tr.no))};
+const arrOf=(j,k)=>Array.isArray(j)?j:(j&&j[k])||[];
 
-// ---------- 地圖 ----------
+// ================= 車站 =================
+let STN=[],SID={},mode="demo";
+async function loadStationsLive(){
+  const c=jget("gl-stations");if(c&&Date.now()-c.t<7*864e5&&c.s.length)return c.s;
+  const j=await api("Station");
+  const s=arrOf(j,"Stations").filter(x=>x.StationPosition&&x.StationPosition.PositionLat).map(x=>({id:String(x.StationID),name:x.StationName.Zh_tw,lat:+x.StationPosition.PositionLat,lon:+x.StationPosition.PositionLon,major:["0","1"].includes(String(x.StationClass))}));
+  store.set("gl-stations",JSON.stringify({t:Date.now(),s}));return s;
+}
+function setStations(s){STN=s;SID={};s.forEach(x=>SID[x.id]=x);routeLine=[];trips=[];buildStreets()}
+const byName=n=>STN.find(s=>norm(s.name)===norm(n));
+
+// ================= 車種 =================
+function classify(n){n=n||"";
+  if(/普悠瑪/.test(n))return{type:"自強",label:"普悠瑪"};if(/太魯閣/.test(n))return{type:"自強",label:"太魯閣"};
+  if(/3000/.test(n))return{type:"自強",label:"自強3000"};if(/自強/.test(n))return{type:"自強",label:"自強"};
+  if(/莒光/.test(n))return{type:"莒光",label:"莒光號"};if(/復興/.test(n))return{type:"莒光",label:"復興號"};
+  if(/區間快/.test(n))return{type:"區間快",label:"區間快"};return{type:"區間",label:"區間"}}
+
+// ================= 示範資料 =================
+const DST=[["基隆",25.132,121.739,0],["三坑",25.123,121.742,3],["八堵",25.108,121.729,6],["七堵",25.093,121.714,10],["百福",25.077,121.694,13],["五堵",25.072,121.668,16],["汐止",25.068,121.656,19],["汐科",25.062,121.646,22],["南港",25.053,121.607,28],["松山",25.049,121.578,33],["臺北",25.048,121.517,39],["萬華",25.033,121.500,45],["板橋",25.014,121.464,50],["浮洲",25.004,121.445,54],["樹林",24.991,121.425,58],["南樹林",24.981,121.414,61],["山佳",24.973,121.392,65],["鶯歌",24.954,121.355,70],["鳳鳴",24.966,121.334,73],["桃園",24.989,121.314,78],["內壢",24.973,121.258,84],["中壢",24.954,121.226,89],["埔心",24.919,121.184,95],["楊梅",24.914,121.146,100],["富岡",24.935,121.083,107],["新富",24.931,121.065,110],["北湖",24.917,121.052,113],["湖口",24.903,121.044,117],["新豐",24.869,120.997,123],["竹北",24.839,121.009,129],["北新竹",24.809,120.990,132],["新竹",24.802,120.972,136]];
+const DMAJ=new Set(["基隆","七堵","南港","松山","臺北","板橋","樹林","桃園","中壢","楊梅","竹北","新竹"]);
+let demoTrains=null;
+function buildDemo(){
+  const names=DST.map(s=>s[0]),cum=n=>DST[names.indexOf(n)][3],T=[];
+  const F={"自強":[.68,1],"莒光":[.78,1],"區間快":[.85,.7],"區間":[1,.5]},SUB=["自強3000","普悠瑪","自強","太魯閣"];let si=0;
+  const mk=(type,no,dir,start,stops)=>{let st=stops.slice().sort((a,b)=>cum(a)-cum(b));if(dir<0)st.reverse();const[f,dw]=F[type];let t=start,p=null;
+    const s=st.map((n,k)=>{if(k>0)t+=Math.abs(cum(n)-cum(p))*f;const a=t,d=(k===0||k===st.length-1)?t:t+dw;t=d;p=n;return{id:n,arr:a,dep:d}});
+    T.push({no:String(no),type,label:type==="自強"?SUB[si++%4]:type==="莒光"?"莒光號":type,dest:st[st.length-1],stops:s,dir})};
+  const EXP=["七堵","南港","松山","臺北","板橋","桃園","中壢","新竹"],SEMI=["基隆","七堵","汐止","南港","松山","臺北","萬華","板橋","樹林","鶯歌","桃園","內壢","中壢","埔心","楊梅","湖口","竹北","新竹"],CHU=["基隆","七堵","汐止","南港","松山","臺北","萬華","板橋","樹林","鶯歌","桃園","中壢","楊梅","新竹"];
+  let n;n=1101;for(let m=320;m<=1380;m+=20){mk("區間",n,1,m,names);n+=2}n=1102;for(let m=305;m<=1380;m+=20){mk("區間",n,-1,m,names);n+=2}
+  n=4001;for(let m=370;m<=1270;m+=60){mk("區間快",n,1,m,SEMI);n+=2}n=4002;for(let m=400;m<=1300;m+=60){mk("區間快",n,-1,m,SEMI);n+=2}
+  n=501;for(let m=430;m<=1270;m+=120){mk("莒光",n,1,m,CHU);n+=2}n=502;for(let m=410;m<=1250;m+=120){mk("莒光",n,-1,m,CHU);n+=2}
+  n=101;for(let m=360;m<=1320;m+=30){mk("自強",n,1,m,EXP);n+=2}n=102;for(let m=350;m<=1310;m+=30){mk("自強",n,-1,m,EXP);n+=2}
+  demoTrains=T;
+}
+function demoStations(){return DST.map(s=>({id:s[0],name:s[0],lat:s[1],lon:s[2],major:DMAJ.has(s[0])}))}
+function demoOD(o,d){
+  const out=[];for(const t of demoTrains){const a=t.stops.findIndex(s=>s.id===o),b=t.stops.findIndex(s=>s.id===d);
+    if(a>=0&&b>a)out.push({no:t.no,type:t.type,label:t.label,dest:t.dest,dep:t.stops[a].dep,arr:t.stops[b].arr,o,d,stops:t.stops})}
+  return out.sort((x,y)=>x.dep-y.dep);
+}
+
+// ================= 班次資料（即時） =================
+async function loadODLive(o,d){
+  const date=todayStr(),key=`gl-od-${o}-${d}-${date}`,c=jget(key);
+  if(c&&Date.now()-c.t<3*36e5)return c.v;
+  const j=await api(`DailyTrainTimetable/OD/${o}/to/${d}/${date}`);
+  const v=arrOf(j,"TrainTimetables").map(t=>{const info=t.TrainInfo||t.DailyTrainInfo||{};
+    const st=t.StopTimes||[t.OriginStopTime,t.DestinationStopTime].filter(Boolean);
+    const so=st.find(s=>String(s.StationID)===o)||st[0],sd=st.find(s=>String(s.StationID)===d)||st[st.length-1];
+    const dep=tm(so.DepartureTime||so.ArrivalTime);let arr=tm(sd.ArrivalTime||sd.DepartureTime);if(arr<dep)arr+=1440;
+    const k=classify(info.TrainTypeName&&info.TrainTypeName.Zh_tw);
+    return{no:String(info.TrainNo),type:k.type,label:k.label,dest:(info.EndingStationName&&info.EndingStationName.Zh_tw)||"",dep,arr,o,d,stops:null}}).filter(x=>x.dep!=null);
+  v.sort((x,y)=>x.dep-y.dep);
+  try{Object.keys(localStorage).filter(k=>k.startsWith("gl-od-")&&!k.endsWith(date)).forEach(k=>store.del(k))}catch(e){}
+  store.set(key,JSON.stringify({t:Date.now(),v}));return v;
+}
+const stopCache=new Map();
+async function loadStops(no){
+  if(stopCache.has(no))return stopCache.get(no);
+  const j=await api(`DailyTrainTimetable/Today/TrainNo/${no}`);const t=arrOf(j,"TrainTimetables")[0];if(!t)return null;
+  let base=null;const s=(t.StopTimes||[]).map(x=>{let a=tm(x.ArrivalTime||x.DepartureTime),dd=tm(x.DepartureTime||x.ArrivalTime);if(base===null)base=a;if(a<base-180)a+=1440;if(dd<base-180)dd+=1440;if(dd<a)dd=a;return{id:String(x.StationID),arr:a,dep:dd}});
+  stopCache.set(no,s);return s;
+}
+let live=new Map(),liveAt=0;
+async function loadLive(){
+  const j=await api("TrainLiveBoard");
+  live=new Map(arrOf(j,"TrainLiveBoards").map(x=>[String(x.TrainNo),{id:String(x.StationID),status:+x.TrainStationStatus,delay:+x.DelayTime||0}]));
+  liveAt=Date.now();
+}
+const delayOf=no=>(live.get(no)||{}).delay||0;
+
+// ================= 狀態 =================
+let from=null,to=null,trips=[],screen="live",selNo=null,follow=true,filter="全部",showAll=false,loading=false,errMsg="";
+
+function upcoming(){const now=nowMin();return trips.filter(t=>t.dep+delayOf(t.no)>=now-.3)}
+function interp(a,b,f){const A=SID[a],B=SID[b];if(!A||!B)return null;return{lat:A.lat+(B.lat-A.lat)*f,lon:A.lon+(B.lon-A.lon)*f}}
+function posOf(tp,now){
+  const t=now-delayOf(tp.no),s=tp.stops;
+  if(s&&t>=s[0].dep&&t<=s[s.length-1].arr){
+    for(let k=0;k<s.length;k++){
+      if(t>=s[k].arr&&t<=s[k].dep){const p=interp(s[k].id,s[k].id,0);return p&&{...p,at:s[k].id,next:s[k+1]&&s[k+1].id}}
+      if(k<s.length-1&&t>s[k].dep&&t<s[k+1].arr){const p=interp(s[k].id,s[k+1].id,(t-s[k].dep)/(s[k+1].arr-s[k].dep));return p&&{...p,prev:s[k].id,next:s[k+1].id}}
+    }
+  }
+  const L=live.get(tp.no);
+  if(L&&SID[L.id]&&(!s||t<=s[s.length-1].arr+30)){const S=SID[L.id];return{lat:S.lat,lon:S.lon,at:L.status===1?L.id:null,near:L.id,status:L.status}}
+  if(!s&&t>=tp.dep&&t<=tp.arr){const p=interp(tp.o,tp.d,(t-tp.dep)/(tp.arr-tp.dep));return p&&{...p,rough:true}}
+  return null;
+}
+
+// ================= 地圖 =================
 const cv=$("map"),ctx=cv.getContext("2d"),box=$("mapbox");
-const wx=lon=>(lon-120.95)*906,wy=lat=>(25.16-lat)*1000;
-const fracPos=c=>{for(let j=0;j<ST.length-1;j++)if(c>=cum(j)&&c<=cum(j+1)){const f=(c-cum(j))/(cum(j+1)-cum(j));return[wx(ST[j][2]+(ST[j+1][2]-ST[j][2])*f),wy(ST[j][1]+(ST[j+1][1]-ST[j][1])*f)]}const s=ST[ST.length-1];return[wx(s[2]),wy(s[1])]};
-// 裝飾用街道紋理（非真實地圖）
-let seed=11;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
-const roads=[[],[],[]];
-ST.forEach(st=>{const cx=wx(st[2]),cy=wy(st[1]),maj=MAJOR.has(st[0]),R=maj?36:20,step=maj?4.4:5.4,ang=rnd()*.9-.45,ca=Math.cos(ang),sa=Math.sin(ang);
-  for(let fam=0;fam<2;fam++)for(let t=-R;t<=R;t+=step*(.75+rnd()*.5)){
-    let u=-Math.sqrt(R*R-t*t);const end=-u;
-    const P=uu=>fam?[cx-sa*uu+ca*t,cy+ca*uu+sa*t]:[cx+ca*uu-sa*t,cy+sa*uu+ca*t];
-    while(u<end){const u2=Math.min(end,u+3+rnd()*11);if(rnd()>.2)roads[rnd()<.06?1:0].push([P(u),P(u2)]);u=u2+(rnd()<.2?1.5:0)}
-  }});
-const MJ=[...MAJOR].map(idx).sort((x,y)=>x-y);
-for(let k=0;k<MJ.length-1;k++){const A=ST[MJ[k]],B=ST[MJ[k+1]];let p=[wx(A[2]),wy(A[1])];const q=[wx(B[2]),wy(B[1])];
-  for(let j=1;j<=4;j++){const f=j/4,n=[p[0]+(q[0]-p[0])/(5-j)+(rnd()-.5)*6,p[1]+(q[1]-p[1])/(5-j)+(rnd()-.5)*6+(j<4?7:0)];if(j===4){n[0]=q[0]+(rnd()-.5)*8;n[1]=q[1]+9}roads[2].push([p,n]);p=n}}
-const RIVERS=[[[121.41,25.18],[121.45,25.12],[121.49,25.08],[121.505,25.04],[121.48,25.01],[121.44,24.98],[121.39,24.95],[121.34,24.92],[121.29,24.88]],
-  [[121.14,24.78],[121.08,24.80],[121.02,24.81],[120.96,24.84],[120.92,24.86]],[[121.74,25.05],[121.68,25.06],[121.62,25.065],[121.57,25.07],[121.52,25.07],[121.49,25.08]]]
-  .map(r=>r.map(([lo,la])=>[wx(lo),wy(la)]));
-const AREAS=[["基隆市",121.70,25.15],["台北市",121.55,25.09],["新北市",121.42,25.04],["桃園市",121.27,25.02],["新竹縣",121.06,24.87],["新竹市",120.94,24.78]];
+const wx=lon=>(lon-120)*906,wy=lat=>(25.4-lat)*1000;
+let roads=[[],[],[]];
+function buildStreets(){
+  roads=[[],[],[]];let seed=11;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+  STN.forEach(st=>{const cx=wx(st.lon),cy=wy(st.lat),R=st.major?34:15,step=st.major?4.4:5.6,ang=rnd()*.9-.45,ca=Math.cos(ang),sa=Math.sin(ang);
+    for(let fam=0;fam<2;fam++)for(let t=-R;t<=R;t+=step*(.75+rnd()*.5)){let u=-Math.sqrt(R*R-t*t);const end=-u;
+      const P=uu=>fam?[cx-sa*uu+ca*t,cy+ca*uu+sa*t]:[cx+ca*uu-sa*t,cy+sa*uu+ca*t];
+      while(u<end){const u2=Math.min(end,u+3+rnd()*11);if(rnd()>.2)roads[rnd()<.06?1:0].push([P(u),P(u2)]);u=u2+(rnd()<.2?1.5:0)}}});
+  const M=STN.filter(s=>s.major);
+  M.forEach(a=>{const near=M.filter(b=>b!==a).map(b=>[b,Math.hypot(b.lat-a.lat,b.lon-a.lon)]).sort((x,y)=>x[1]-y[1]).slice(0,2);
+    near.forEach(([b])=>{let p=[wx(a.lon),wy(a.lat)];const q=[wx(b.lon),wy(b.lat)];for(let j=1;j<=4;j++){const n=j<4?[p[0]+(q[0]-p[0])/(5-j)+(rnd()-.5)*6,p[1]+(q[1]-p[1])/(5-j)+(rnd()-.5)*6+6]:[q[0],q[1]+8];roads[2].push([p,n]);p=n}})});
+}
+const AREAS=[["基隆市",121.70,25.15],["臺北市",121.56,25.09],["新北市",121.42,25.04],["桃園市",121.27,25.02],["新竹縣",121.06,24.87],["苗栗縣",120.86,24.55],["臺中市",120.68,24.20],["彰化縣",120.50,24.05],["雲林縣",120.45,23.72],["嘉義縣",120.40,23.45],["臺南市",120.25,23.05],["高雄市",120.33,22.70],["屏東縣",120.55,22.55],["臺東縣",121.10,22.85],["花蓮縣",121.55,23.80],["宜蘭縣",121.75,24.70]];
 
-let W=0,H=0,view={cx:300,cy:150,s:2},target=null,cardH=0;
+let W=0,H=0,view={cx:1200,cy:400,s:2},target=null,cardH=0,routeLine=[];
 function resize(){const r=box.getBoundingClientRect(),d=devicePixelRatio||1;W=r.width;H=r.height;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);cardH=$("card").offsetHeight+24;$("locate").style.bottom=(cardH+4)+"px"}
 const sx=x=>(x-view.cx)*view.s+W/2,sy=y=>(y-view.cy)*view.s+(H-cardH)/2;
+function computeRoute(){
+  let best=null;for(const t of trips){if(!t.stops)continue;const a=t.stops.findIndex(s=>s.id===from.id),b=t.stops.findIndex(s=>s.id===to.id);if(a<0||b<0)continue;const seg=t.stops.slice(Math.min(a,b),Math.max(a,b)+1);if(!best||seg.length>best.length)best=seg}
+  routeLine=(best?best.map(s=>s.id):[from.id,to.id]).filter(id=>SID[id]);
+}
 function fitRoute(instant){
-  const a=idx(from),b=idx(to);let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
-  for(let i=Math.min(a,b);i<=Math.max(a,b);i++){const x=wx(ST[i][2]),y=wy(ST[i][1]);x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y)}
+  const pts=(routeLine.length?routeLine:[from.id,to.id]).map(id=>SID[id]).filter(Boolean);if(!pts.length||!W)return;
+  let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;pts.forEach(p=>{const x=wx(p.lon),y=wy(p.lat);x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y)});
   const s=Math.min((W-90)/Math.max(x1-x0,20),(H-cardH-110)/Math.max(y1-y0,20),9);
-  const t={cx:(x0+x1)/2,cy:(y0+y1)/2,s:Math.max(s,.5),fit:true};if(instant)view={...t};else target=t;
+  const t={cx:(x0+x1)/2,cy:(y0+y1)/2,s:Math.max(s,.15),fit:true};if(instant)view={...t};else target=t;
 }
 const rr=(x,y,w,h,r)=>{ctx.beginPath();if(ctx.roundRect)ctx.roundRect(x,y,w,h,r);else ctx.rect(x,y,w,h)};
 function label(x,y,t,strong){ctx.font=`800 ${strong?13:12}px ${FONT}`;const w=ctx.measureText(t).width+18;rr(x-w/2,y-12,w,24,9);ctx.fillStyle=strong?"#2f63ff":"rgba(10,16,40,.88)";ctx.fill();ctx.strokeStyle="rgba(140,170,255,.45)";ctx.lineWidth=1;ctx.stroke();ctx.fillStyle="#fff";ctx.textAlign="center";ctx.fillText(t,x,y+4.5)}
 let hits=[];
 function draw(){
+  requestAnimationFrame(draw);
+  if(!W||!from||!to||screen!=="live")return;
   const now=nowMin(),tt=performance.now()/1000;
-  const sel=trains.find(t=>t.no===selNo),sst=sel&&stateAt(sel,now);
-  if(follow&&sst){const[x,y]=fracPos(sst.c);target={cx:x,cy:y,s:(target||view).s}}
+  const sel=trips.find(t=>t.no===selNo),sp=sel&&posOf(sel,now);
+  if(follow&&sp){target={cx:wx(sp.lon),cy:wy(sp.lat),s:(target||view).s}}
   if(target){const k=.1;view.cx+=(target.cx-view.cx)*k;view.cy+=(target.cy-view.cy)*k;view.s+=(target.s-view.s)*k;if(!follow&&Math.abs(target.s-view.s)<.002&&Math.abs(target.cx-view.cx)<.05)target=null}
-  ctx.fillStyle="#0a1024";ctx.fillRect(0,0,W,H);
-  ctx.lineCap="round";ctx.lineJoin="round";
-  // 河流
-  for(const r of RIVERS){ctx.beginPath();r.forEach((p,i)=>i?ctx.lineTo(sx(p[0]),sy(p[1])):ctx.moveTo(sx(p[0]),sy(p[1])));ctx.strokeStyle="rgba(40,80,190,.22)";ctx.lineWidth=Math.max(3,view.s*2.2);ctx.stroke()}
+  ctx.fillStyle="#0a1024";ctx.fillRect(0,0,W,H);ctx.lineCap="round";ctx.lineJoin="round";
   const segs=(arr,col,w)=>{ctx.beginPath();for(const[p,q]of arr){const x1=sx(p[0]),y1=sy(p[1]),x2=sx(q[0]),y2=sy(q[1]);if((x1<-20&&x2<-20)||(x1>W+20&&x2>W+20)||(y1<-20&&y2<-20)||(y1>H+20&&y2>H+20))continue;ctx.moveTo(x1,y1);ctx.lineTo(x2,y2)}ctx.strokeStyle=col;ctx.lineWidth=w;ctx.stroke()};
   if(view.s>1)segs(roads[0],`rgba(125,145,215,${Math.min(.2,.07+view.s*.02)})`,Math.min(.6+view.s*.12,1.6));
-  segs(roads[1],"rgba(130,150,225,.22)",Math.min(1+view.s*.2,2.6));
+  if(view.s>.5)segs(roads[1],"rgba(130,150,225,.22)",Math.min(1+view.s*.2,2.6));
   segs(roads[2],"rgba(140,160,235,.14)",Math.min(1.6+view.s*.3,4));
   ctx.font=`800 11px ${FONT}`;ctx.textAlign="center";ctx.fillStyle="rgba(150,165,220,.32)";
   AREAS.forEach(([t,lo,la])=>ctx.fillText(t.split("").join(" "),sx(wx(lo)),sy(wy(la))));
-  const P=ST.map(s=>[sx(wx(s[2])),sy(wy(s[1]))]);
-  const path=(a,b)=>{ctx.beginPath();for(let i=a;i<=b;i++)i===a?ctx.moveTo(...P[i]):ctx.lineTo(...P[i])};
-  path(0,ST.length-1);ctx.strokeStyle="#1d2c62";ctx.lineWidth=4;ctx.stroke();
-  const a=idx(from),b=idx(to),lo=Math.min(a,b),hi=Math.max(a,b);
-  path(lo,hi);ctx.strokeStyle="#2f63ff";ctx.lineWidth=6;ctx.shadowColor="#3d7bff";ctx.shadowBlur=20;ctx.stroke();ctx.shadowBlur=0;
-  path(lo,hi);ctx.strokeStyle="#a9c1ff";ctx.lineWidth=1.6;ctx.stroke();
-  ST.forEach((s,i)=>{const[x,y]=P[i];if(x<-50||x>W+50||y<-30||y>H+30)return;const key=i===a||i===b,inn=i>=lo&&i<=hi,maj=MAJOR.has(s[0]);if(key)return;
-    ctx.beginPath();ctx.arc(x,y,maj?3.5:2.5,0,7);ctx.fillStyle=inn?"#d6e1ff":"#3a4a85";ctx.fill();
-    if(maj&&view.s>1.4||view.s>4.5){ctx.font=`${inn?800:600} 11px ${FONT}`;ctx.fillStyle=inn?"rgba(225,233,255,.9)":"rgba(140,155,210,.55)";ctx.textAlign="left";ctx.fillText(s[0],x+7,y+4)}});
-  {const[x,y]=P[b];ctx.beginPath();ctx.arc(x,y,11,0,7);ctx.fillStyle="rgba(91,134,255,.25)";ctx.fill();ctx.beginPath();ctx.arc(x,y,5.5,0,7);ctx.fillStyle="#e0e8ff";ctx.fill();label(x,y+26,"抵達 "+to)}
-  {const[x,y]=P[a];ctx.beginPath();ctx.arc(x,y-17,13,0,7);ctx.moveTo(x-8,y-9);ctx.lineTo(x,y);ctx.lineTo(x+8,y-9);ctx.fillStyle="#5b86ff";ctx.shadowColor="#5b86ff";ctx.shadowBlur=16;ctx.fill();ctx.shadowBlur=0;ctx.beginPath();ctx.arc(x,y-17,5,0,7);ctx.fillStyle="#0a1024";ctx.fill();label(x,y-42,"出發 "+from)}
-  hits=[];const dir=idx(to)>idx(from)?1:-1;let selXY=null;
-  for(const tr of trains){const st=stateAt(tr,now);if(!st)continue;const[px,py]=fracPos(st.c),x=sx(px),y=sy(py);
-    if(x<-30||x>W+30||y<-30||y>H+30)continue;hits.push({no:tr.no,x,y});
-    if(tr.no===selNo){selXY={x,y,tr};continue}
-    const mine=usable.has(tr.no),same=tr.dir===dir;
-    ctx.beginPath();ctx.arc(x,y,mine?7:4,0,7);ctx.fillStyle=mine?"#2f63ff":same?"#4a5584":"#2c3560";ctx.fill();
-    if(mine){ctx.lineWidth=2;ctx.strokeStyle="#d6e1ff";ctx.stroke()}}
-  if(selXY){const{x,y,tr}=selXY,p=(tt*.8)%1;
+  // 全部車站（淡）
+  const lab=view.s>4;
+  STN.forEach(s=>{const x=sx(wx(s.lon)),y=sy(wy(s.lat));if(x<-40||x>W+40||y<-20||y>H+20)return;ctx.beginPath();ctx.arc(x,y,s.major?3:2,0,7);ctx.fillStyle="#34437c";ctx.fill();
+    if(lab||(s.major&&view.s>1.6)){ctx.font=`600 11px ${FONT}`;ctx.fillStyle="rgba(140,155,210,.55)";ctx.textAlign="left";ctx.fillText(s.name,x+6,y+4)}});
+  // 路線
+  const RL=routeLine.filter(id=>SID[id]),P=RL.map(id=>[sx(wx(SID[id].lon)),sy(wy(SID[id].lat))]);
+  if(P.length>1){const path=()=>{ctx.beginPath();P.forEach((p,i)=>i?ctx.lineTo(...p):ctx.moveTo(...p))};
+    path();ctx.strokeStyle="#2f63ff";ctx.lineWidth=6;ctx.shadowColor="#3d7bff";ctx.shadowBlur=20;ctx.stroke();ctx.shadowBlur=0;path();ctx.strokeStyle="#a9c1ff";ctx.lineWidth=1.6;ctx.stroke();
+    RL.forEach((id,i)=>{if(i===0||i===RL.length-1)return;const[x,y]=P[i];ctx.beginPath();ctx.arc(x,y,3.2,0,7);ctx.fillStyle="#d6e1ff";ctx.fill();
+      if(view.s>1.8){ctx.font=`800 11px ${FONT}`;ctx.fillStyle="rgba(225,233,255,.9)";ctx.textAlign="left";ctx.fillText(SID[id].name,x+7,y+4)}})}
+  const A=SID[from.id],B=SID[to.id];
+  if(B){const x=sx(wx(B.lon)),y=sy(wy(B.lat));ctx.beginPath();ctx.arc(x,y,11,0,7);ctx.fillStyle="rgba(91,134,255,.25)";ctx.fill();ctx.beginPath();ctx.arc(x,y,5.5,0,7);ctx.fillStyle="#e0e8ff";ctx.fill();label(x,y+26,"抵達 "+to.name)}
+  if(A){const x=sx(wx(A.lon)),y=sy(wy(A.lat));ctx.beginPath();ctx.arc(x,y-17,13,0,7);ctx.moveTo(x-8,y-9);ctx.lineTo(x,y);ctx.lineTo(x+8,y-9);ctx.fillStyle="#5b86ff";ctx.shadowColor="#5b86ff";ctx.shadowBlur=16;ctx.fill();ctx.shadowBlur=0;ctx.beginPath();ctx.arc(x,y-17,5,0,7);ctx.fillStyle="#0a1024";ctx.fill();label(x,y-42,"出發 "+from.name)}
+  // 列車
+  hits=[];const mine=new Set(trips.map(t=>t.no));
+  if(mode==="live"){for(const[no,L]of live){if(mine.has(no))continue;const S=SID[L.id];if(!S)continue;const x=sx(wx(S.lon)),y=sy(wy(S.lat));if(x<-20||x>W+20||y<-20||y>H+20)continue;ctx.beginPath();ctx.arc(x+((+no%5)-2)*2,y+((+no%3)-1)*2,3.5,0,7);ctx.fillStyle="#3a4680";ctx.fill()}}
+  else{for(const t of demoTrains){if(mine.has(t.no))continue;const p=posOf({no:t.no,stops:t.stops},now);if(!p)continue;const x=sx(wx(p.lon)),y=sy(wy(p.lat));if(x<-20||x>W+20||y<-20||y>H+20)continue;ctx.beginPath();ctx.arc(x,y,3.5,0,7);ctx.fillStyle="#3a4680";ctx.fill()}}
+  let selXY=null;
+  for(const t of trips){const p=posOf(t,now);if(!p)continue;const x=sx(wx(p.lon)),y=sy(wy(p.lat));if(x<-30||x>W+30||y<-30||y>H+30)continue;hits.push({no:t.no,x,y});
+    if(t.no===selNo){selXY={x,y,t};continue}
+    ctx.beginPath();ctx.arc(x,y,7,0,7);ctx.fillStyle=TYPES[t.type].c;ctx.fill();ctx.lineWidth=2;ctx.strokeStyle="#d6e1ff";ctx.stroke()}
+  if(selXY){const{x,y,t}=selXY,p=(tt*.8)%1;
     ctx.beginPath();ctx.arc(x,y,18+p*26,0,7);ctx.fillStyle=`rgba(91,134,255,${.4*(1-p)})`;ctx.fill();
     ctx.beginPath();ctx.arc(x,y,18,0,7);ctx.fillStyle="#2f63ff";ctx.shadowColor="#4d82ff";ctx.shadowBlur=24;ctx.fill();ctx.shadowBlur=0;ctx.lineWidth=2.5;ctx.strokeStyle="#fff";ctx.stroke();
-    ctx.fillStyle="#fff";rr(x-7,y-9,14,14,4);ctx.fill();
-    ctx.fillStyle="#2f63ff";ctx.fillRect(x-5,y-7,10,5);ctx.beginPath();ctx.arc(x-3.6,y+1.6,1.5,0,7);ctx.arc(x+3.6,y+1.6,1.5,0,7);ctx.fill();
+    ctx.fillStyle="#fff";rr(x-7,y-9,14,14,4);ctx.fill();ctx.fillStyle="#2f63ff";ctx.fillRect(x-5,y-7,10,5);ctx.beginPath();ctx.arc(x-3.6,y+1.6,1.5,0,7);ctx.arc(x+3.6,y+1.6,1.5,0,7);ctx.fill();
     ctx.strokeStyle="#fff";ctx.lineWidth=1.8;ctx.beginPath();ctx.moveTo(x-4,y+6);ctx.lineTo(x-6.5,y+10);ctx.moveTo(x+4,y+6);ctx.lineTo(x+6.5,y+10);ctx.stroke();
-    label(x,y-36,tr.label+" "+tr.no,true)}
-  requestAnimationFrame(draw);
+    label(x,y-36,t.label+" "+t.no,true)}
 }
 const ptr=new Map();let moved=false,pinch=null;
 cv.addEventListener("pointerdown",e=>{cv.setPointerCapture(e.pointerId);ptr.set(e.pointerId,{x:e.clientX,y:e.clientY});moved=false;if(ptr.size===2){const[p,q]=[...ptr.values()];pinch={d:Math.hypot(p.x-q.x,p.y-q.y),s:view.s}}});
 cv.addEventListener("pointermove",e=>{const p=ptr.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;if(Math.abs(dx)+Math.abs(dy)>3)moved=true;
   if(ptr.size===1&&moved){view.cx-=dx/view.s;view.cy-=dy/view.s;target=null;setFollow(false)}p.x=e.clientX;p.y=e.clientY;
-  if(ptr.size===2&&pinch){const[a,b]=[...ptr.values()];view.s=Math.min(Math.max(pinch.s*Math.hypot(a.x-b.x,a.y-b.y)/pinch.d,.5),16);if(target)target.s=view.s}});
+  if(ptr.size===2&&pinch){const[a,b]=[...ptr.values()];view.s=Math.min(Math.max(pinch.s*Math.hypot(a.x-b.x,a.y-b.y)/pinch.d,.15),16);if(target)target.s=view.s}});
 const up=e=>{if(!moved&&ptr.size===1){const r=cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;let best=null,bd=26;hits.forEach(h=>{const d=Math.hypot(h.x-x,h.y-y);if(d<bd){bd=d;best=h}});if(best){selNo=best.no;setFollow(true);renderCard()}}ptr.delete(e.pointerId);if(ptr.size<2)pinch=null};
 cv.addEventListener("pointerup",up);cv.addEventListener("pointercancel",up);
-cv.addEventListener("wheel",e=>{e.preventDefault();view.s=Math.min(Math.max(view.s*(e.deltaY<0?1.12:.89),.5),16);if(target)target.s=view.s},{passive:false});
-const zoom=f=>{const s=Math.min(Math.max(view.s*f,.5),16),b=target||view;target={cx:b.cx,cy:b.cy,s,fit:true}};
+cv.addEventListener("wheel",e=>{e.preventDefault();view.s=Math.min(Math.max(view.s*(e.deltaY<0?1.12:.89),.15),16);if(target)target.s=view.s},{passive:false});
+const zoom=f=>{const s=Math.min(Math.max(view.s*f,.15),16),b=target||view;target={cx:b.cx,cy:b.cy,s,fit:true}};
 $("zin").onclick=()=>zoom(1.6);$("zout").onclick=()=>zoom(1/1.6);
 function setFollow(v){follow=v;$("locate").classList.toggle("on",v);if(!v&&target&&!target.fit)target=null}
 $("locate").onclick=()=>setFollow(!follow);
 
-// ---------- 地圖卡片 ----------
+// ================= 地圖卡片 =================
+const nm=id=>(SID[id]||{}).name||"";
+function delayHtml(no){if(mode!=="live"||!live.has(no))return"";const d=delayOf(no);return d>0?`<span class="dly late">晚 ${d} 分</span>`:`<span class="dly">準點</span>`}
 function renderCard(){
+  if(!from||!to)return;
   const now=nowMin(),list=upcoming();
-  if(!selNo||!trains.some(t=>t.no===selNo&&(stateAt(t,now)||t.pts[0].dep>now)))selNo=list[0]?list[0].tr.no:null;
-  const tr=trains.find(t=>t.no===selNo);
-  if(!tr){$("card").innerHTML=`<div class="grab"></div><div class="empty">今天往${to}的班次已經結束</div>`;resize();return}
-  const st=stateAt(tr,now),pa=tr.pts.find(p=>p.i===idx(from)),pb=tr.pts.find(p=>p.i===idx(to));
-  let badge,where;
-  if(!st){badge=`<span class="state wait">● 未發車</span>`;where=`${fmt(tr.pts[0].dep)} ${tr.org}發車`}
-  else if(st.at!==null){badge=`<span class="state stop">● 停靠中</span>`;where=`停靠 ${NAMES[st.at]}`}
-  else{badge=`<span class="state">● 行駛中</span>`;where=`${NAMES[st.prev]} → ${NAMES[st.next]}`}
-  let s1="—",s2="—";
-  if(pa){const m=pa.arr-now;s1=m>.5?`${Math.ceil(m)} 分後`:now<pa.arr?"即將進站":now<=pa.dep?"停靠中":"已駛離"}
-  if(pb)s2=pb.arr>now?fmt(pb.arr):"已到站";
-  const k=list.findIndex(m=>m.tr.no===selNo);
+  if(loading&&!trips.length){$("card").innerHTML=`<div class="grab"></div><div class="loading"><span class="spin"></span>正在讀取班次…</div>`;resize();return}
+  if(!selNo||!trips.some(t=>t.no===selNo&&(posOf(t,now)||t.dep+delayOf(t.no)>now)))selNo=list[0]?list[0].no:null;
+  const tp=trips.find(t=>t.no===selNo);
+  if(!tp){$("card").innerHTML=`<div class="grab"></div><div class="empty">${errMsg||`今天往${to.name}的班次已經結束`}</div>`;resize();return}
+  const p=posOf(tp,now),d=delayOf(tp.no);let badge,where;
+  if(!p&&now<tp.dep+d){badge=`<span class="state wait">● 未發車</span>`;where=tp.stops?`${fmt(tp.stops[0].dep)} ${nm(tp.stops[0].id)}開`:"尚未發車"}
+  else if(!p){badge=`<span class="state wait">● 已到站</span>`;where=`已抵達${tp.dest}`}
+  else if(p.at){badge=`<span class="state stop">● 停靠中</span>`;where=`停靠 ${nm(p.at)}`}
+  else if(p.prev){badge=`<span class="state">● 行駛中</span>`;where=`${nm(p.prev)} → ${nm(p.next)}`}
+  else if(p.near){badge=`<span class="state">● 行駛中</span>`;where=p.status===0?`即將到 ${nm(p.near)}`:`剛離開 ${nm(p.near)}`}
+  else{badge=`<span class="state">● 行駛中</span>`;where=`往${to.name}途中`}
+  const arrO=(tp.stops&&(tp.stops.find(s=>s.id===from.id)||{}).arr)||tp.dep,m=arrO+d-now;
+  const s1=m>.5?`${Math.ceil(m)} 分後`:now<tp.dep+d?"即將進站":"已駛離";
+  const s3=mode==="live"&&live.has(tp.no)?(d>0?`<b class="late">晚 ${d} 分</b>`:`<b class="ok">準點</b>`):`<b>${fmt(tp.arr+d)}</b>`;
+  const k=list.findIndex(t=>t.no===selNo);
   $("card").innerHTML=`<div class="grab"></div>
-    <div class="chead"><div class="tile" style="--c:${TYPES[tr.type].c}"><svg width="22" height="22"><use href="#i-train"/></svg></div>
-      <div style="min-width:0"><h2>${tr.label} ${tr.no}</h2><p>@往${tr.dest}・${from} ${pa?fmt(pa.dep):""} 開</p></div>${badge}</div>
-    <div class="stats"><div><small>目前位置</small><b>${where}</b></div><div><small>抵達${from}</small><b class="hl">${s1}</b></div><div><small>抵達${to}</small><b>${s2}</b></div></div>
+    <div class="chead"><div class="tile" style="--c:${TYPES[tp.type].c}"><svg width="22" height="22"><use href="#i-train"/></svg></div>
+      <div style="min-width:0"><h2>${tp.label} ${tp.no}</h2><p>往${tp.dest}・${from.name} ${fmt(tp.dep)} 開</p></div>${badge}</div>
+    <div class="stats"><div><small>目前位置</small><b>${where}</b></div><div><small>抵達${from.name}</small><b class="hl">${s1}</b></div><div><small>${mode==="live"&&live.has(tp.no)?"誤點":"抵達"+to.name}</small>${s3}</div></div>
     <div class="btns"><button class="btn line" id="prevT" ${k<=0?"disabled":""}>‹ 前一班</button><button class="btn blue" id="nextT" ${k<0||k>=list.length-1?"disabled":""}>下一班 ›</button></div>`;
-  $("prevT").onclick=()=>{selNo=list[k-1].tr.no;setFollow(true);renderCard()};
-  $("nextT").onclick=()=>{selNo=list[k+1].tr.no;setFollow(true);renderCard()};
+  $("prevT").onclick=()=>{selNo=list[k-1].no;setFollow(true);renderCard();ensureStops()};
+  $("nextT").onclick=()=>{selNo=list[k+1].no;setFollow(true);renderCard();ensureStops()};
   if(Math.abs($("card").offsetHeight+24-cardH)>2)resize();
 }
 
-// ---------- 時刻表 ----------
+// ================= 時刻表 =================
 const CHIPS=[["全部","全","#2f63ff"],["自強","自","#2f63ff"],["莒光","莒","#e0883a"],["區間快","快","#8a5cff"],["區間","區","#1aa7b3"]];
 function renderTable(){
+  if(!from||!to)return;
   const now=nowMin(),d=new Date(Date.now()+480*6e4);
   $("todayTxt").textContent=`${d.getUTCMonth()+1}月${d.getUTCDate()}日 星期${"日一二三四五六"[d.getUTCDay()]}`;
-  $("fromName").textContent=from;$("toName").textContent=to;
+  $("fromName").textContent=from.name;$("toName").textContent=to.name;
   $("chips").innerHTML=CHIPS.map(([t,s,c])=>`<button class="chip" aria-pressed="${filter===t}" data-f="${t}" style="--c:${c}"><i>${s}</i>${t}</button>`).join("");
-  const all=upcoming(),list=all.filter(m=>filter==="全部"||m.tr.type===filter),nx=all[0];
-  $("banner").innerHTML=nx?`<h3>下一班 ${Math.max(0,Math.ceil(nx.pa.dep-now))} 分後發車</h3><p>${nx.tr.label} ${nx.tr.no}，<b>${fmt(nx.pa.dep)}</b> 從${from}出發，${fmt(nx.pb.arr)} 抵達${to}。點任一班次，就能在地圖上看它在哪。</p>`:`<h3>今天的班次已結束</h3><p>${from} → ${to} 今天已經沒有車了。</p>`;
+  const all=upcoming(),list=all.filter(m=>filter==="全部"||m.type===filter),nx=all[0];
+  let b="";
+  if(mode==="demo")b=`<h3>目前是示範模式</h3><p>班次是示範資料。輸入你的 TDX 金鑰，就會顯示<b>台鐵真實時刻</b>和<b>即時誤點</b>。</p><button class="act" data-set>輸入金鑰</button>`;
+  else if(errMsg)b=`<h3>資料讀取失敗</h3><p>${errMsg}</p><button class="act" id="retry">重新讀取</button>`;
+  else if(loading&&!trips.length)b=`<h3>正在讀取班次…</h3><p>第一次查詢這段路線會比較久一點。</p>`;
+  else if(nx){const dd=delayOf(nx.no),mm=Math.max(0,Math.ceil(nx.dep+dd-now));b=`<h3>下一班 ${mm} 分後發車</h3><p>${nx.label} ${nx.no}，<b>${fmt(nx.dep)}</b> 從${from.name}出發${dd>0?`（目前晚 ${dd} 分）`:""}，${fmt(nx.arr)} 抵達${to.name}。</p>`}
+  else b=`<h3>今天的班次已結束</h3><p>${from.name} → ${to.name} 今天已經沒有車了。</p>`;
+  $("banner").innerHTML=b;
   $("count").textContent=`今天還有 ${list.length} 班`;
-  const shown=showAll?list:list.slice(0,20);
-  $("list").innerHTML=shown.length?shown.map(m=>{const dd=m.pa.dep-now,cd=dd<1?`<span class="cd soon">即將發車</span>`:dd<60?`<span class="cd${dd<5?" soon":""}">${Math.ceil(dd)} 分後</span>`:"";
-    return `<button class="item${m===nx?" next":""}" data-no="${m.tr.no}">
-      <div class="thumb" style="--c:${TYPES[m.tr.type].c}"><svg width="58" height="58" style="color:var(--c)"><use href="#i-front"/></svg><small>${m.tr.label}</small></div>
-      <div class="info"><h4>${m.tr.label} ${m.tr.no} ${cd}</h4>
-        <div class="times">${fmt(m.pa.dep)}<span>→</span>${fmt(m.pb.arr)}</div>
-        <div class="meta">${Math.round(m.dur)} 分・${m.stops?`停 ${m.stops} 站`:"直達"}・往${m.tr.dest}</div>
-        <div class="row"><span class="price"><sup>$</sup><b>${m.fare}</b><small>全票</small></span><span class="pillbtn"><svg width="15" height="15"><use href="#i-map"/></svg>看位置</span></div></div></button>`}).join("")
-    +(list.length>20&&!showAll?`<button class="more" id="moreBtn">顯示全部 ${list.length} 班</button>`:"")
+  const shown=showAll?list:list.slice(0,25);
+  $("list").innerHTML=(loading&&!trips.length)?`<div class="loading"><span class="spin"></span>讀取中…</div>`:shown.length?shown.map(m=>{const dl=delayOf(m.no),dd=m.dep+dl-now,cd=dd<1?`<span class="cd soon">即將發車</span>`:dd<60?`<span class="cd${dd<5?" soon":""}">${Math.ceil(dd)} 分後</span>`:"";
+    return `<button class="item${m===nx?" next":""}" data-no="${m.no}">
+      <div class="thumb" style="--c:${TYPES[m.type].c}"><svg width="58" height="58" style="color:var(--c)"><use href="#i-front"/></svg><small>${m.label}</small></div>
+      <div class="info"><h4>${m.label} ${m.no} ${cd}</h4>
+        <div class="times">${fmt(m.dep)}<span>→</span>${fmt(m.arr)}</div>
+        <div class="meta">${Math.round(m.arr-m.dep)} 分・往${m.dest}</div>
+        <div class="row"><span>${delayHtml(m.no)}</span><span class="pillbtn"><svg width="15" height="15"><use href="#i-map"/></svg>看位置</span></div></div></button>`}).join("")
+    +(list.length>25&&!showAll?`<button class="more" id="moreBtn">顯示全部 ${list.length} 班</button>`:"")
     :`<div class="empty">沒有符合的班次</div>`;
+  $("foot").innerHTML=mode==="live"?`資料來源：交通部 TDX 運輸資料流通服務${liveAt?`<br>即時誤點更新於 ${fmt(nowMin()-(Date.now()-liveAt)/6e4)}`:""}`:"示範資料，非台鐵官方時刻。";
 }
 $("chips").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;filter=b.dataset.f;renderTable()});
-$("list").addEventListener("click",e=>{if(e.target.id==="moreBtn"){showAll=true;renderTable();return}const it=e.target.closest(".item");if(!it)return;selNo=it.dataset.no;go("live");setFollow(true);renderCard()});
+$("list").addEventListener("click",e=>{if(e.target.id==="moreBtn"){showAll=true;renderTable();return}const it=e.target.closest(".item");if(!it)return;selNo=it.dataset.no;go("live");setFollow(true);renderCard();ensureStops()});
+$("banner").addEventListener("click",e=>{if(e.target.id==="retry")refreshAll()});
 
-// ---------- 導覽 ----------
+// ================= 資料流程 =================
+let stopsBusy=false;
+async function ensureStops(){
+  if(mode!=="live"||stopsBusy)return;stopsBusy=true;
+  try{const now=nowMin();
+    const want=trips.filter(t=>!t.stops&&(t.no===selNo||(t.dep-90<now&&t.arr+15>now))).sort((a,b)=>(b.no===selNo)-(a.no===selNo)).slice(0,8);
+    for(const t of want){try{t.stops=await loadStops(t.no)}catch(e){if(/頻繁/.test(e.message))break}await new Promise(r=>setTimeout(r,250))}
+    if(want.length){computeRoute();renderCard()}
+  }finally{stopsBusy=false}
+}
+async function refreshLive(){if(mode!=="live")return;try{await loadLive();errMsg="";}catch(e){toast(e.message)}renderCard();if(screen==="table")renderTable()}
+async function loadTrips(){
+  errMsg="";
+  if(mode==="demo"){trips=demoOD(from.id,to.id);computeRoute();return}
+  loading=true;trips=[];renderCard();renderTable();
+  try{trips=await loadODLive(from.id,to.id)}catch(e){errMsg=e.message;trips=[]}
+  loading=false;computeRoute();
+}
+async function refreshAll(){
+  await loadTrips();selNo=null;fitRoute(!view.init);view.init=true;renderCard();renderTable();
+  setFollow(false);clearTimeout(refreshAll.t);refreshAll.t=setTimeout(()=>setFollow(true),1200);
+  if(mode==="live"){await refreshLive();ensureStops()}
+}
+
+// ================= 導覽與選站 =================
 function go(s){screen=s;$("scrLive").hidden=s!=="live";$("scrTable").hidden=s!=="table";
   document.querySelectorAll(".tabbar button").forEach(b=>b.setAttribute("aria-current",b.dataset.go===s));
-  if(s==="live"){requestAnimationFrame(()=>{resize();renderCard()})}else renderTable()}
+  if(s==="live")requestAnimationFrame(()=>{resize();renderCard()});else renderTable()}
 document.querySelectorAll(".tabbar button").forEach(b=>b.onclick=()=>go(b.dataset.go));
 $("backBtn").onclick=()=>go("live");
 
-let followTimer=null;
 function routeChanged(){
-  store.set("gl-route",JSON.stringify({f:from,t:to}));
-  $("lFrom").textContent=from;$("lTo").textContent=to;
-  refreshUsable();selNo=null;renderCard();renderTable();setFollow(false);fitRoute();
-  clearTimeout(followTimer);followTimer=setTimeout(()=>setFollow(true),1200);
+  store.set("gl-route2",JSON.stringify({f:from.name,t:to.name}));
+  $("lFrom").textContent=from.name;$("lTo").textContent=to.name;$("fromName").textContent=from.name;$("toName").textContent=to.name;
+  refreshAll();
 }
 const swap=()=>{[from,to]=[to,from];routeChanged()};
-let rot=false;
-$("swap").onclick=()=>{rot=!rot;$("swap").classList.toggle("spin",rot);swap()};
-$("liveSwap").onclick=swap;
+let rot=false;$("swap").onclick=()=>{rot=!rot;$("swap").classList.toggle("spin",rot);swap()};$("liveSwap").onclick=swap;
 
-let picking=null;
-function openPicker(w){picking=w;$("pickTitle").textContent=w==="from"?"選擇出發站":"選擇抵達站";
-  const cur=w==="from"?from:to,other=w==="from"?to:from;
-  $("plist").innerHTML=NAMES.map(n=>`<button class="${n===cur?"cur":n===other?"other":""}" data-n="${n}">${n}</button>`).join("");
-  $("overlay").classList.add("show")}
+const HOT=["臺北","松山","南港","板橋","桃園","中壢","新竹","臺中","彰化","嘉義","臺南","高雄","基隆","宜蘭","花蓮","臺東"];
+let picking=null,chain=false;
+function renderPick(){
+  const q=norm($("pSearch").value),cur=picking==="from"?from:to,other=picking==="from"?to:from;
+  const btn=s=>`<button class="${s.id===cur.id?"cur":s.id===other.id?"other":""}" data-id="${s.id}">${s.name}</button>`;
+  let h="";
+  if(q){const r=STN.filter(s=>norm(s.name).includes(q));h=r.length?r.map(btn).join(""):`<p class="psub">找不到「${$("pSearch").value}」</p>`}
+  else{const hot=HOT.map(byName).filter(Boolean);if(hot.length)h+=`<p class="psub">熱門車站</p>`+hot.map(btn).join("");h+=`<p class="psub">全部車站</p>`+STN.map(btn).join("")}
+  $("plist").innerHTML=h;
+}
+function openPicker(w){picking=w;$("pickTitle").textContent=w==="from"?"選擇出發站":"選擇抵達站";$("pSearch").value="";renderPick();$("overlay").classList.add("show");$("plist").scrollTop=0}
+$("pSearch").addEventListener("input",renderPick);
 $("fromBtn").onclick=()=>openPicker("from");$("toBtn").onclick=()=>openPicker("to");
-let chain=false;
 $("liveRoute").onclick=()=>{chain=true;openPicker("from")};
-$("overlay").addEventListener("click",e=>{const b=e.target.closest("button[data-n]");
-  if(b){const v=b.dataset.n,was=picking;if(was==="from"){if(v===to)to=from;from=v}else{if(v===from)from=to;to=v}
-    $("overlay").classList.remove("show");routeChanged();
+$("overlay").addEventListener("click",e=>{const b=e.target.closest("button[data-id]");
+  if(b){const v=SID[b.dataset.id],was=picking;if(was==="from"){if(v.id===to.id)to=from;from=v}else{if(v.id===from.id)from=to;to=v}
+    $("overlay").classList.remove("show");$("pSearch").blur();routeChanged();
     if(chain&&was==="from")setTimeout(()=>openPicker("to"),380);else chain=false;return}
   if(e.target.id==="overlay"){chain=false;$("overlay").classList.remove("show")}});
 
-// ---------- 開場 ----------
-if(!store.get("gl-onboarded"))$("splash").hidden=false;
-$("startBtn").onclick=()=>{store.set("gl-onboarded","1");$("splash").classList.add("out");setTimeout(()=>$("splash").hidden=true,460)};
+// ================= 金鑰設定 =================
+function openSettings(){$("kId").value=keys?keys.id:"";$("kSec").value=keys?keys.secret:"";$("kMsg").textContent="";$("kMsg").className="msg";$("setOv").classList.add("show")}
+document.addEventListener("click",e=>{if(e.target.closest("[data-set]"))openSettings()});
+$("setOv").addEventListener("click",e=>{if(e.target.id==="setOv")$("setOv").classList.remove("show")});
+$("kSave").onclick=async()=>{
+  const id=$("kId").value.trim(),secret=$("kSec").value.trim();
+  if(!id||!secret){$("kMsg").textContent="兩個欄位都要填";$("kMsg").className="msg err";return}
+  $("kMsg").textContent="連線中…";$("kMsg").className="msg";
+  const old=keys;keys={id,secret};token=null;store.del("gl-token");
+  try{await getToken(true);store.set("gl-keys",JSON.stringify(keys));$("kMsg").textContent="連線成功！正在讀取台鐵資料…";$("kMsg").className="msg ok";
+    await startLive();setTimeout(()=>$("setOv").classList.remove("show"),600)}
+  catch(e){keys=old;$("kMsg").textContent=e.message;$("kMsg").className="msg err"}
+};
+$("kClear").onclick=()=>{keys=null;token=null;["gl-keys","gl-token"].forEach(k=>store.del(k));$("setOv").classList.remove("show");startDemo();toast("已改用示範模式")};
 
-// ---------- 啟動 ----------
-$("lFrom").textContent=from;$("lTo").textContent=to;
-refreshUsable();renderCard();resize();fitRoute(true);
-new ResizeObserver(resize).observe(box);
-setInterval(()=>{if(screen==="live")renderCard();else renderTable()},5000);
+// ================= 啟動 =================
+function pickDefaults(){const r=jget("gl-route2")||{f:"桃園",t:"松山"};from=byName(r.f)||byName("桃園")||STN[0];to=byName(r.t)||byName("松山")||STN[1];if(from===to)to=STN.find(s=>s!==from)}
+function setModeTag(){const e=$("modeTag");e.classList.toggle("on",mode==="live");e.lastChild.textContent=mode==="live"?"即時":"示範"}
+function startDemo(){mode="demo";live=new Map();if(!demoTrains)buildDemo();setStations(demoStations());pickDefaults();setModeTag();$("lFrom").textContent=from.name;$("lTo").textContent=to.name;view.init=false;refreshAll()}
+async function startLive(){
+  const s=await loadStationsLive();mode="live";setStations(s);pickDefaults();setModeTag();
+  $("lFrom").textContent=from.name;$("lTo").textContent=to.name;view.init=false;await refreshAll();
+}
+if(!store.get("gl-onboarded"))$("splash").hidden=false;
+$("startBtn").onclick=()=>{store.set("gl-onboarded","1");$("splash").classList.add("out");setTimeout(()=>$("splash").hidden=true,460);if(mode==="demo"&&!keys)setTimeout(openSettings,600)};
+
+new ResizeObserver(()=>{resize();if(!view.init&&from){fitRoute(true);view.init=true}}).observe(box);
+resize();
+(async()=>{
+  if(keys){try{await startLive()}catch(e){toast(e.message+"，先用示範模式");startDemo()}}
+  else startDemo();
+})();
+setInterval(()=>{if(document.hidden)return;if(screen==="live")renderCard();else renderTable()},5000);
+setInterval(()=>{if(!document.hidden){refreshLive();ensureStops()}},60000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&mode==="live"&&Date.now()-liveAt>45000){refreshLive();ensureStops()}});
 requestAnimationFrame(draw);
 </script>
 
