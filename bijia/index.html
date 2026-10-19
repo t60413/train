@@ -268,7 +268,7 @@ div.rim{background:linear-gradient(150deg,rgba(255,255,255,.12),rgba(255,255,255
       <h3>比價伺服器</h3>
       <p class="sub">貼上你在 Cloudflare 建好的網址（例如 https://bijia.xxx.workers.dev）。</p>
       <input id="server" type="url" placeholder="https://bijia.xxxx.workers.dev" autocomplete="off" autocapitalize="off">
-      <div class="row"><button class="btn cy" id="btnServer" type="button">儲存並測試</button></div>
+      <div class="row"><button class="btn cy" id="btnServer" type="button">儲存並測試</button><a class="btn" href="setup.html">還沒建？看教學</a></div>
       <div class="sub" id="serverStatus"></div>
     </div>
     <div class="g col">
@@ -429,6 +429,7 @@ $('btnClearDone').onclick=()=>{LS.set('bijia-list',lst().filter(x=>!x.done));ren
 $('server').value=server();
 $('btnServer').onclick=async()=>{let v=$('server').value.trim();if(v&&!/^https?:\/\//.test(v))v='https://'+v;LS.set('bijia-server',v.replace(/\/+$/,''));$('server').value=server();
   if(!v){$('serverStatus').textContent='已清除';return}
+  if(/github\.io/.test(v)){LS.set('bijia-server','');$('server').value='';$('serverStatus').textContent='這是教學頁的網址喔！請照教學在 Cloudflare 建好伺服器，再貼上 workers.dev 結尾的網址。';return}
   $('serverStatus').innerHTML='<span class="spin"></span>測試中…';
   try{const r=await fetch(server()+'/');const d=await r.json();$('serverStatus').textContent=d.ok?`連線成功 ✓　AI 拍照辨識：${d.ai?'已開啟':'未設定金鑰（只能打字搜尋）'}`:'網址好像不對';homeIdle()}
   catch(e){$('serverStatus').textContent='連不上，請檢查網址'}};
