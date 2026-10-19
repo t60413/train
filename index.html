@@ -73,7 +73,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 .btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border-radius:12px;font-size:14px;font-weight:700}
 .btn.blue{background:var(--blue);color:#fff;box-shadow:0 6px 18px rgba(47,99,255,.35)}
-.btn.line{background:rgba(255,120,140,.14);border:1px solid rgba(255,120,140,.22);color:#ffd0d6}
+.btn.line{background:rgba(255,255,255,.06);border:1px solid var(--stroke);color:#dfe6ff}
 .btn:disabled{opacity:.35}
 
 .scroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;margin-top:-30px;border-radius:30px 30px 0 0;background:linear-gradient(180deg,#0f1a44,var(--ink) 340px);padding-block:18px 24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:16px}
@@ -170,6 +170,61 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 .loading{display:flex;align-items:center;justify-content:center;gap:10px;padding:30px 0;color:var(--muted);font-size:14px}
 .spin{width:18px;height:18px;border-radius:50%;border:2.5px solid var(--stroke);border-top-color:var(--blue-hi);animation:sp 1s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
+.tp{font-size:11px;font-weight:800;padding:3px 7px;border-radius:7px;white-space:nowrap}
+.tp.ok{background:rgba(79,227,161,.14);color:var(--ok)}
+.tp.no{background:rgba(140,153,198,.14);color:var(--muted)}
+.badges{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.qbar{display:flex;gap:8px;align-items:stretch}
+.days{display:flex;gap:6px;flex:1;min-width:0}
+.day{flex:1;padding:8px 4px;border-radius:12px;border:1px solid var(--stroke);background:rgba(255,255,255,.04);font-size:13px;font-weight:800;color:#cfd7f5;text-align:center;line-height:1.25}
+.day small{display:block;font-size:10px;color:var(--muted);font-weight:700}
+.day[aria-pressed="true"]{background:var(--blue);border-color:var(--blue-hi);color:#fff}
+.day[aria-pressed="true"] small{color:#dfe6ff}
+.qtime{position:relative;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:6px 12px;border-radius:12px;border:1px solid var(--stroke);background:rgba(255,255,255,.04);font-size:15px;font-weight:800;min-width:82px}
+.qtime small{font-size:10px;color:var(--muted)}
+.qtime input{position:absolute;inset:0;opacity:0;width:100%;height:100%;font-size:16px}
+.qtime.set{border-color:var(--blue-hi);background:rgba(47,99,255,.22)}
+.qnow{font-size:12px;font-weight:800;color:var(--blue-hi);align-self:flex-end;margin-top:-6px}
+.item.gone{opacity:.5}
+.item{cursor:pointer}
+.acts{display:flex;gap:6px}
+.pillbtn.lock{background:rgba(255,255,255,.06);border-color:var(--stroke)}
+.pillbtn.lock.on{background:rgba(255,200,90,.18);border-color:rgba(255,200,90,.4);color:#ffd27a}
+.btns.three{grid-template-columns:.8fr 1.3fr .8fr}
+.btn.lockb{background:rgba(255,200,90,.14);border:1px solid rgba(255,200,90,.3);color:#ffd27a}
+.tabbar{grid-template-columns:1fr 1fr 1fr}
+.hero{padding:16px;border-radius:22px;background:linear-gradient(180deg,rgba(46,72,170,.62),rgba(24,40,104,.72));border:1px solid rgba(140,170,255,.35);display:flex;flex-direction:column;gap:14px;box-shadow:0 14px 34px rgba(0,0,0,.35)}
+.nextst{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:end;padding:14px;border-radius:16px;background:rgba(0,0,0,.22)}
+.nextst small{font-size:12px;color:var(--muted)}
+.nextst b{font-size:26px;font-weight:800}
+.nextst .eta{font-size:26px;font-weight:800;color:var(--blue-hi);text-align:right}
+.nextst .sub{grid-column:1/-1;font-size:13px;color:var(--muted);margin-top:4px}
+.prog{height:6px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden}
+.prog i{display:block;height:100%;background:linear-gradient(90deg,var(--blue),var(--blue-hi));border-radius:3px;box-shadow:0 0 10px var(--blue)}
+.tl{display:flex;flex-direction:column;padding:4px 14px;border-radius:20px;background:var(--glass);border:1px solid var(--stroke)}
+.tst{display:grid;grid-template-columns:22px 1fr auto;gap:12px;align-items:center;min-height:50px;position:relative}
+.tst::before{content:"";position:absolute;left:10px;top:0;bottom:0;width:2px;background:rgba(120,150,255,.25)}
+.tst:first-child::before{top:50%}.tst:last-child::before{bottom:50%}
+.tst.past::before{background:var(--blue)}
+.tst i{position:relative;z-index:1;width:12px;height:12px;margin-left:5px;border-radius:50%;background:var(--ink);border:2px solid var(--blue-hi)}
+.tst.past i{background:var(--blue);border-color:var(--blue)}
+.tst.cur i{width:18px;height:18px;margin-left:2px;background:#fff;border:4px solid var(--blue);box-shadow:0 0 0 6px rgba(47,99,255,.25)}
+.tst .n{font-size:16px;font-weight:700}
+.tst.past .n{color:var(--muted)}
+.tst.cur .n{font-weight:800}
+.tst .n small{display:block;font-size:11px;color:var(--blue-hi);font-weight:800}
+.tst.mark .n{color:var(--blue-hi)}
+.tst .t{text-align:right;font-size:16px;font-weight:800}
+.tst .t small{display:block;font-size:11px;color:var(--muted);font-weight:600}
+.tst.past .t{color:var(--muted)}
+.tst .t.late{color:var(--red)}
+.lockin{grid-template-columns:1fr auto}
+.lockin input{min-width:0;padding:12px 14px;border-radius:12px;border:1px solid var(--stroke);background:rgba(0,0,0,.25);color:var(--fg);font:inherit;font-size:18px;font-weight:800}
+.lockgo{padding:0 20px;border-radius:12px;background:var(--blue);font-weight:800;color:#fff}
+.quick{display:flex;flex-direction:column;gap:8px}
+.qk{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:var(--glass);border:1px solid var(--stroke);text-align:left;width:100%}
+.qk b{font-size:16px;font-weight:800}
+.qk span{margin-left:auto;font-size:13px;color:var(--muted)}
 .banner .act{margin-top:10px;display:inline-flex;padding:8px 14px;border-radius:10px;background:var(--blue);font-size:13px;font-weight:800}
 </style>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -225,6 +280,11 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
         <button class="swap" id="swap" aria-label="交換出發與抵達"><svg width="18" height="18"><use href="#i-swap"/></svg></button>
         <button class="stn" id="toBtn"><small>抵達</small><b id="toName">松山</b></button>
       </div>
+      <div class="qbar">
+        <div class="days" id="days"></div>
+        <label class="qtime" id="qtimeBox"><small>出發時間</small><span id="qtTxt">現在</span><input type="time" id="qTime" aria-label="選擇出發時間"></label>
+      </div>
+      <button class="qnow" id="qNow" hidden>回到現在</button>
       <div class="chips" id="chips"></div>
       <div class="sect">班次<span id="count"></span></div>
       <div class="list" id="list"></div>
@@ -232,9 +292,18 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
     </div>
   </section>
 
+  <section class="screen" id="scrMine" hidden>
+    <header class="top">
+      <div class="grow"><h1>我的車次</h1><p>鎖定你正在搭的車，看每一站幾點到</p></div>
+      <button class="circ r" data-set aria-label="設定"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg></button>
+    </header>
+    <div class="scroll" id="mine"></div>
+  </section>
+
   <nav class="tabbar">
     <button data-go="live" aria-current="true"><svg width="22" height="22"><use href="#i-map"/></svg>列車位置</button>
     <button data-go="table" aria-current="false"><svg width="22" height="22"><use href="#i-list"/></svg>時刻表</button>
+    <button data-go="mine" aria-current="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>我的車次</button>
   </nav>
 
   <div class="overlay" id="overlay"><div class="sheet" role="dialog" aria-modal="true"><div class="grab" style="margin-top:10px"></div><h3 id="pickTitle">選擇出發站</h3>
@@ -289,6 +358,7 @@ const nowMin=()=>{const d=Date.now()/60000+480;return((d%1440)+1440)%1440};
 const pad=x=>String(x).padStart(2,"0");
 const fmt=m=>{const r=Math.round(m);return pad(Math.floor(((r%1440)+1440)%1440/60))+":"+pad(((r%60)+60)%60)};
 const tm=s=>{if(!s)return null;const[h,m]=String(s).split(":");return(+h)*60+(+m)};
+const dateStr=o=>{const d=new Date(Date.now()+480*6e4+o*864e5);return `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}`};
 const todayStr=()=>{const d=new Date(Date.now()+480*6e4);return `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}`};
 const norm=s=>String(s||"").replace(/台/g,"臺").trim();
 const FONT="Nunito,'Noto Sans TC',sans-serif";
@@ -334,6 +404,13 @@ function classify(n){n=n||"";
   if(/莒光/.test(n))return{type:"莒光",label:"莒光號"};if(/復興/.test(n))return{type:"莒光",label:"復興號"};
   if(/區間快/.test(n))return{type:"區間快",label:"區間快"};return{type:"區間",label:"區間"}}
 
+// ================= 月票（TPASS 基北北桃） =================
+const TP_BAD=/普悠瑪|太魯閣|3000|觀光|團體|郵輪|鳴日|藍皮|環島|專開/;
+const inTP=s=>!!s&&s.lon>=121.06&&s.lat>=24.925&&!(s.lon>121.94&&s.lat<25.01);
+const tpType=t=>!TP_BAD.test((t.raw||"")+t.label);
+const tpOK=(t,a,b)=>tpType(t)&&inTP(SID[a])&&inTP(SID[b]);
+const tpHtml=(t,a,b)=>tpOK(t,a,b)?`<span class="tp ok">月票可搭</span>`:`<span class="tp no">月票不適用</span>`;
+
 // ================= 示範資料 =================
 const DST=[["基隆",25.132,121.739,0],["三坑",25.123,121.742,3],["八堵",25.108,121.729,6],["七堵",25.093,121.714,10],["百福",25.077,121.694,13],["五堵",25.072,121.668,16],["汐止",25.068,121.656,19],["汐科",25.062,121.646,22],["南港",25.053,121.607,28],["松山",25.049,121.578,33],["臺北",25.048,121.517,39],["萬華",25.033,121.500,45],["板橋",25.014,121.464,50],["浮洲",25.004,121.445,54],["樹林",24.991,121.425,58],["南樹林",24.981,121.414,61],["山佳",24.973,121.392,65],["鶯歌",24.954,121.355,70],["鳳鳴",24.966,121.334,73],["桃園",24.989,121.314,78],["內壢",24.973,121.258,84],["中壢",24.954,121.226,89],["埔心",24.919,121.184,95],["楊梅",24.914,121.146,100],["富岡",24.935,121.083,107],["新富",24.931,121.065,110],["北湖",24.917,121.052,113],["湖口",24.903,121.044,117],["新豐",24.869,120.997,123],["竹北",24.839,121.009,129],["北新竹",24.809,120.990,132],["新竹",24.802,120.972,136]];
 const DMAJ=new Set(["基隆","七堵","南港","松山","臺北","板橋","樹林","桃園","中壢","楊梅","竹北","新竹"]);
@@ -354,13 +431,13 @@ function buildDemo(){
 function demoStations(){return DST.map(s=>({id:s[0],name:s[0],lat:s[1],lon:s[2],major:DMAJ.has(s[0])}))}
 function demoOD(o,d){
   const out=[];for(const t of demoTrains){const a=t.stops.findIndex(s=>s.id===o),b=t.stops.findIndex(s=>s.id===d);
-    if(a>=0&&b>a)out.push({no:t.no,type:t.type,label:t.label,dest:t.dest,dep:t.stops[a].dep,arr:t.stops[b].arr,o,d,stops:t.stops})}
+    if(a>=0&&b>a)out.push({no:t.no,type:t.type,label:t.label,raw:t.label,dest:t.dest,dep:t.stops[a].dep,arr:t.stops[b].arr,o,d,stops:t.stops})}
   return out.sort((x,y)=>x.dep-y.dep);
 }
 
 // ================= 班次資料（即時） =================
-async function loadODLive(o,d){
-  const date=todayStr(),key=`gl-od-${o}-${d}-${date}`,c=jget(key);
+async function loadODLive(o,d,date){
+  date=date||todayStr();const key=`gl-od-${o}-${d}-${date}`,c=jget(key);
   if(c&&Date.now()-c.t<3*36e5)return c.v;
   const j=await api(`DailyTrainTimetable/OD/${o}/to/${d}/${date}`);
   const v=arrOf(j,"TrainTimetables").map(t=>{const info=t.TrainInfo||t.DailyTrainInfo||{};
@@ -368,18 +445,21 @@ async function loadODLive(o,d){
     const so=st.find(s=>String(s.StationID)===o)||st[0],sd=st.find(s=>String(s.StationID)===d)||st[st.length-1];
     const dep=tm(so.DepartureTime||so.ArrivalTime);let arr=tm(sd.ArrivalTime||sd.DepartureTime);if(arr<dep)arr+=1440;
     const k=classify(info.TrainTypeName&&info.TrainTypeName.Zh_tw);
-    return{no:String(info.TrainNo),type:k.type,label:k.label,dest:(info.EndingStationName&&info.EndingStationName.Zh_tw)||"",dep,arr,o,d,stops:null}}).filter(x=>x.dep!=null);
+    return{no:String(info.TrainNo),type:k.type,label:k.label,raw:(info.TrainTypeName&&info.TrainTypeName.Zh_tw)||"",dest:(info.EndingStationName&&info.EndingStationName.Zh_tw)||"",dep,arr,o,d,stops:null}}).filter(x=>x.dep!=null);
   v.sort((x,y)=>x.dep-y.dep);
-  try{Object.keys(localStorage).filter(k=>k.startsWith("gl-od-")&&!k.endsWith(date)).forEach(k=>store.del(k))}catch(e){}
+  try{const keep=[0,1,2].map(dateStr);Object.keys(localStorage).filter(k=>k.startsWith("gl-od-")&&!keep.some(x=>k.endsWith(x))).forEach(k=>store.del(k))}catch(e){}
   store.set(key,JSON.stringify({t:Date.now(),v}));return v;
 }
 const stopCache=new Map();
-async function loadStops(no){
-  if(stopCache.has(no))return stopCache.get(no);
+function parseStops(arr){let base=null;return(arr||[]).map(x=>{let a=tm(x.ArrivalTime||x.DepartureTime),dd=tm(x.DepartureTime||x.ArrivalTime);if(base===null)base=a;if(a<base-180)a+=1440;if(dd<base-180)dd+=1440;if(dd<a)dd=a;return{id:String(x.StationID),arr:a,dep:dd}})}
+async function fetchTrain(no){
+  if(mode==="demo"){const t=demoTrains.find(x=>x.no===no);return t?{no,type:t.type,label:t.label,raw:t.label,dest:t.dest,stops:t.stops}:null}
   const j=await api(`DailyTrainTimetable/Today/TrainNo/${no}`);const t=arrOf(j,"TrainTimetables")[0];if(!t)return null;
-  let base=null;const s=(t.StopTimes||[]).map(x=>{let a=tm(x.ArrivalTime||x.DepartureTime),dd=tm(x.DepartureTime||x.ArrivalTime);if(base===null)base=a;if(a<base-180)a+=1440;if(dd<base-180)dd+=1440;if(dd<a)dd=a;return{id:String(x.StationID),arr:a,dep:dd}});
-  stopCache.set(no,s);return s;
+  const info=t.TrainInfo||t.DailyTrainInfo||{},raw=(info.TrainTypeName&&info.TrainTypeName.Zh_tw)||"",k=classify(raw),stops=parseStops(t.StopTimes);
+  stopCache.set(no,stops);
+  return{no:String(no),type:k.type,label:k.label,raw,dest:(info.EndingStationName&&info.EndingStationName.Zh_tw)||(SID[stops[stops.length-1]&&stops[stops.length-1].id]||{}).name||"",stops};
 }
+async function loadStops(no){if(stopCache.has(no))return stopCache.get(no);const t=await fetchTrain(no);return t?t.stops:null}
 let live=new Map(),liveAt=0;
 async function loadLive(){
   const j=await api("TrainLiveBoard");
@@ -389,8 +469,10 @@ async function loadLive(){
 const delayOf=no=>(live.get(no)||{}).delay||0;
 
 // ================= 狀態 =================
+let locked=null,qDay=0,qTime=null,qEarlier=0,qLater=20,tableTrips=null,tableLoading=false;
 let from=null,to=null,trips=[],screen="live",selNo=null,follow=true,filter="全部",showAll=false,loading=false,errMsg="";
 
+const allT=()=>locked&&!trips.some(t=>t.no===locked.no)?trips.concat([locked]):trips;
 function upcoming(){const now=nowMin();return trips.filter(t=>t.dep+delayOf(t.no)>=now-.3)}
 function interp(a,b,f){const A=SID[a],B=SID[b];if(!A||!B)return null;return{lat:A.lat+(B.lat-A.lat)*f,lon:A.lon+(B.lon-A.lon)*f}}
 function posOf(tp,now){
@@ -443,7 +525,7 @@ function draw(){
   requestAnimationFrame(draw);
   if(!W||!from||!to||screen!=="live")return;
   const now=nowMin(),tt=performance.now()/1000;
-  const sel=trips.find(t=>t.no===selNo),sp=sel&&posOf(sel,now);
+  const sel=allT().find(t=>t.no===selNo),sp=sel&&posOf(sel,now);
   if(follow&&sp){target={cx:wx(sp.lon),cy:wy(sp.lat),s:(target||view).s}}
   if(target){const k=.1;view.cx+=(target.cx-view.cx)*k;view.cy+=(target.cy-view.cy)*k;view.s+=(target.s-view.s)*k;if(!follow&&Math.abs(target.s-view.s)<.002&&Math.abs(target.cx-view.cx)<.05)target=null}
   ctx.fillStyle="#0a1024";ctx.fillRect(0,0,W,H);ctx.lineCap="round";ctx.lineJoin="round";
@@ -471,15 +553,15 @@ function draw(){
   if(mode==="live"){for(const[no,L]of live){if(mine.has(no))continue;const S=SID[L.id];if(!S)continue;const x=sx(wx(S.lon)),y=sy(wy(S.lat));if(x<-20||x>W+20||y<-20||y>H+20)continue;ctx.beginPath();ctx.arc(x+((+no%5)-2)*2,y+((+no%3)-1)*2,3.5,0,7);ctx.fillStyle="#3a4680";ctx.fill()}}
   else{for(const t of demoTrains){if(mine.has(t.no))continue;const p=posOf({no:t.no,stops:t.stops},now);if(!p)continue;const x=sx(wx(p.lon)),y=sy(wy(p.lat));if(x<-20||x>W+20||y<-20||y>H+20)continue;ctx.beginPath();ctx.arc(x,y,3.5,0,7);ctx.fillStyle="#3a4680";ctx.fill()}}
   let selXY=null;
-  for(const t of trips){const p=posOf(t,now);if(!p)continue;const x=sx(wx(p.lon)),y=sy(wy(p.lat));if(x<-30||x>W+30||y<-30||y>H+30)continue;hits.push({no:t.no,x,y});
+  for(const t of allT()){const p=posOf(t,now);if(!p)continue;const x=sx(wx(p.lon)),y=sy(wy(p.lat));if(x<-30||x>W+30||y<-30||y>H+30)continue;hits.push({no:t.no,x,y});
     if(t.no===selNo){selXY={x,y,t};continue}
-    ctx.beginPath();ctx.arc(x,y,7,0,7);ctx.fillStyle=TYPES[t.type].c;ctx.fill();ctx.lineWidth=2;ctx.strokeStyle="#d6e1ff";ctx.stroke()}
+    ctx.beginPath();ctx.arc(x,y,7,0,7);ctx.fillStyle=TYPES[t.type].c;ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=locked&&t.no===locked.no?"#ffd27a":"#d6e1ff";ctx.stroke()}
   if(selXY){const{x,y,t}=selXY,p=(tt*.8)%1;
     ctx.beginPath();ctx.arc(x,y,18+p*26,0,7);ctx.fillStyle=`rgba(91,134,255,${.4*(1-p)})`;ctx.fill();
     ctx.beginPath();ctx.arc(x,y,18,0,7);ctx.fillStyle="#2f63ff";ctx.shadowColor="#4d82ff";ctx.shadowBlur=24;ctx.fill();ctx.shadowBlur=0;ctx.lineWidth=2.5;ctx.strokeStyle="#fff";ctx.stroke();
     ctx.fillStyle="#fff";rr(x-7,y-9,14,14,4);ctx.fill();ctx.fillStyle="#2f63ff";ctx.fillRect(x-5,y-7,10,5);ctx.beginPath();ctx.arc(x-3.6,y+1.6,1.5,0,7);ctx.arc(x+3.6,y+1.6,1.5,0,7);ctx.fill();
     ctx.strokeStyle="#fff";ctx.lineWidth=1.8;ctx.beginPath();ctx.moveTo(x-4,y+6);ctx.lineTo(x-6.5,y+10);ctx.moveTo(x+4,y+6);ctx.lineTo(x+6.5,y+10);ctx.stroke();
-    label(x,y-36,t.label+" "+t.no,true)}
+    label(x,y-36,(locked&&t.no===locked.no?"🔒 ":"")+t.label+" "+t.no,true)}
 }
 const ptr=new Map();let moved=false,pinch=null;
 cv.addEventListener("pointerdown",e=>{cv.setPointerCapture(e.pointerId);ptr.set(e.pointerId,{x:e.clientX,y:e.clientY});moved=false;if(ptr.size===2){const[p,q]=[...ptr.values()];pinch={d:Math.hypot(p.x-q.x,p.y-q.y),s:view.s}}});
@@ -501,8 +583,8 @@ function renderCard(){
   if(!from||!to)return;
   const now=nowMin(),list=upcoming();
   if(loading&&!trips.length){$("card").innerHTML=`<div class="grab"></div><div class="loading"><span class="spin"></span>正在讀取班次…</div>`;resize();return}
-  if(!selNo||!trips.some(t=>t.no===selNo&&(posOf(t,now)||t.dep+delayOf(t.no)>now)))selNo=list[0]?list[0].no:null;
-  const tp=trips.find(t=>t.no===selNo);
+  if(!selNo||!allT().some(t=>t.no===selNo&&(posOf(t,now)||(t.dep!=null&&t.dep+delayOf(t.no)>now)||t===locked)))selNo=list[0]?list[0].no:null;
+  const tp=allT().find(t=>t.no===selNo);
   if(!tp){$("card").innerHTML=`<div class="grab"></div><div class="empty">${errMsg||`今天往${to.name}的班次已經結束`}</div>`;resize();return}
   const p=posOf(tp,now),d=delayOf(tp.no);let badge,where;
   if(!p&&now<tp.dep+d){badge=`<span class="state wait">● 未發車</span>`;where=tp.stops?`${fmt(tp.stops[0].dep)} ${nm(tp.stops[0].id)}開`:"尚未發車"}
@@ -511,52 +593,148 @@ function renderCard(){
   else if(p.prev){badge=`<span class="state">● 行駛中</span>`;where=`${nm(p.prev)} → ${nm(p.next)}`}
   else if(p.near){badge=`<span class="state">● 行駛中</span>`;where=p.status===0?`即將到 ${nm(p.near)}`:`剛離開 ${nm(p.near)}`}
   else{badge=`<span class="state">● 行駛中</span>`;where=`往${to.name}途中`}
-  const arrO=(tp.stops&&(tp.stops.find(s=>s.id===from.id)||{}).arr)||tp.dep,m=arrO+d-now;
-  const s1=p&&p.at===from.id?"停靠中":m>.5?`${Math.ceil(m)} 分後`:now<tp.dep+d?"即將進站":"已駛離";
+  if(tp.dep==null){tp.dep=tp.stops[0].dep;tp.arr=tp.stops[tp.stops.length-1].arr}
+  const arrO=(tp.stops&&(tp.stops.find(s=>s.id===from.id)||{}).arr)||tp.dep,m=arrO+d-now,inOD=trips.includes(tp);
+  let s1=p&&p.at===from.id?"停靠中":m>.5?`${Math.ceil(m)} 分後`:now<tp.dep+d?"即將進站":"已駛離",s1l=`抵達${from.name}`;
+  if(!inOD){const nx=tp.stops.find(s=>s.arr+d>now);s1l=nx?`下一站 ${nm(nx.id)}`:"終點";s1=nx?fmt(nx.arr+d):"已到站"}
   const s3=mode==="live"&&live.has(tp.no)?(d>0?`<b class="late">晚 ${d} 分</b>`:`<b class="ok">準點</b>`):`<b>${fmt(tp.arr+d)}</b>`;
   const k=list.findIndex(t=>t.no===selNo);
   $("card").innerHTML=`<div class="grab"></div>
     <div class="chead"><div class="tile" style="--c:${TYPES[tp.type].c}"><svg width="22" height="22"><use href="#i-train"/></svg></div>
-      <div style="min-width:0"><h2>${tp.label} ${tp.no}</h2><p>往${tp.dest}・${from.name} ${fmt(tp.dep)} 開</p></div>${badge}</div>
-    <div class="stats"><div><small>目前位置</small><b>${where}</b></div><div><small>抵達${from.name}</small><b class="hl">${s1}</b></div><div><small>${mode==="live"&&live.has(tp.no)?"誤點":"抵達"+to.name}</small>${s3}</div></div>
-    <div class="btns"><button class="btn line" id="prevT" ${k<=0?"disabled":""}>‹ 前一班</button><button class="btn blue" id="nextT" ${k<0||k>=list.length-1?"disabled":""}>下一班 ›</button></div>`;
+      <div style="min-width:0"><h2>${tp.label} ${tp.no}</h2><p>往${tp.dest}${inOD?`・${from.name} ${fmt(tp.dep)} 開`:""}</p></div>${badge}</div>
+    <div class="stats"><div><small>目前位置</small><b>${where}</b></div><div><small>${s1l}</small><b class="hl">${s1}</b></div><div><small>${mode==="live"&&live.has(tp.no)?"誤點":"抵達"+to.name}</small>${s3}</div></div>
+    <div class="btns three"><button class="btn line" id="prevT" ${k<=0?"disabled":""}>‹ 前班</button><button class="btn ${locked&&locked.no===tp.no?"lockb":"blue"}" id="lockT">${locked&&locked.no===tp.no?"🔒 已鎖定":"🔒 鎖定這班"}</button><button class="btn line" id="nextT" ${k<0||k>=list.length-1?"disabled":""}>後班 ›</button></div>`;
+  $("lockT").onclick=()=>{if(locked&&locked.no===tp.no)go("mine");else setLock(tp.no,tp)};
   $("prevT").onclick=()=>{selNo=list[k-1].no;setFollow(true);renderCard();ensureStops()};
   $("nextT").onclick=()=>{selNo=list[k+1].no;setFollow(true);renderCard();ensureStops()};
   if(Math.abs($("card").offsetHeight+24-cardH)>2)resize();
 }
 
 // ================= 時刻表 =================
-const CHIPS=[["全部","全","#2f63ff"],["自強","自","#2f63ff"],["莒光","莒","#e0883a"],["區間快","快","#8a5cff"],["區間","區","#1aa7b3"]];
+const CHIPS=[["全部","全","#2f63ff"],["月票","票","#1fb67a"],["自強","自","#2f63ff"],["莒光","莒","#e0883a"],["區間快","快","#8a5cff"],["區間","區","#1aa7b3"]];
+const dayLbl=o=>{const d=new Date(Date.now()+480*6e4+o*864e5);return `${d.getUTCMonth()+1}/${d.getUTCDate()}`};
+const wkLbl=o=>"日一二三四五六"[new Date(Date.now()+480*6e4+o*864e5).getUTCDay()];
+async function loadTable(){
+  if(qDay===0||mode==="demo"){tableTrips=null;renderTable();return}
+  tableLoading=true;tableTrips=[];renderTable();
+  try{tableTrips=await loadODLive(from.id,to.id,dateStr(qDay))}catch(e){tableTrips=[];toast(e.message)}
+  tableLoading=false;renderTable();
+}
 function renderTable(){
   if(!from||!to)return;
-  const now=nowMin(),d=new Date(Date.now()+480*6e4);
-  $("todayTxt").textContent=`${d.getUTCMonth()+1}月${d.getUTCDate()}日 星期${"日一二三四五六"[d.getUTCDay()]}`;
+  const now=nowMin(),today=qDay===0;
+  $("todayTxt").textContent=`${dayLbl(0)} 星期${wkLbl(0)}`;
   $("fromName").textContent=from.name;$("toName").textContent=to.name;
+  $("days").innerHTML=[0,1,2].map(o=>`<button class="day" aria-pressed="${qDay===o}" data-d="${o}">${["今天","明天","後天"][o]}<small>${dayLbl(o)}（${wkLbl(o)}）</small></button>`).join("");
+  $("qtTxt").textContent=qTime!=null?fmt(qTime):(today?"現在":"首班");
+  $("qtimeBox").classList.toggle("set",qTime!=null);$("qNow").hidden=qTime==null;
   $("chips").innerHTML=CHIPS.map(([t,s,c])=>`<button class="chip" aria-pressed="${filter===t}" data-f="${t}" style="--c:${c}"><i>${s}</i>${t}</button>`).join("");
-  const all=upcoming(),list=all.filter(m=>filter==="全部"||m.type===filter),nx=all[0];
-  let b="";
-  if(mode==="demo")b=`<h3>目前是示範模式</h3><p>班次是示範資料。輸入你的 TDX 金鑰，就會顯示<b>台鐵真實時刻</b>和<b>即時誤點</b>。</p><button class="act" data-set>輸入金鑰</button>`;
-  else if(errMsg)b=`<h3>資料讀取失敗</h3><p>${errMsg}</p><button class="act" id="retry">重新讀取</button>`;
-  else if(loading&&!trips.length)b=`<h3>正在讀取班次…</h3><p>第一次查詢這段路線會比較久一點。</p>`;
-  else if(nx){const dd=delayOf(nx.no),mm=Math.max(0,Math.ceil(nx.dep+dd-now));b=`<h3>下一班 ${mm} 分後發車</h3><p>${nx.label} ${nx.no}，<b>${fmt(nx.dep)}</b> 從${from.name}出發${dd>0?`（目前晚 ${dd} 分）`:""}，${fmt(nx.arr)} 抵達${to.name}。</p>`}
-  else b=`<h3>今天的班次已結束</h3><p>${from.name} → ${to.name} 今天已經沒有車了。</p>`;
-  $("banner").innerHTML=b;
-  $("count").textContent=`今天還有 ${list.length} 班`;
-  const shown=showAll?list:list.slice(0,25);
-  $("list").innerHTML=(loading&&!trips.length)?`<div class="loading"><span class="spin"></span>讀取中…</div>`:shown.length?shown.map(m=>{const dl=delayOf(m.no),dd=m.dep+dl-now,cd=dd<1?`<span class="cd soon">即將發車</span>`:dd<60?`<span class="cd${dd<5?" soon":""}">${Math.ceil(dd)} 分後</span>`:"";
-    return `<button class="item${m===nx?" next":""}" data-no="${m.no}">
+  const src=today?trips:(tableTrips||trips),busy=today?loading:tableLoading;
+  const fit=m=>filter==="全部"||(filter==="月票"?tpOK(m,from.id,to.id):m.type===filter);
+  const base=src.filter(fit),nx=upcoming()[0];
+  const startT=qTime!=null?qTime:(today?now:0),dl=m=>today?delayOf(m.no):0;
+  let i0=base.findIndex(m=>m.dep+dl(m)>=startT-.3);if(i0<0)i0=base.length;
+  const a=Math.max(0,i0-qEarlier),b=Math.min(base.length,i0+qLater),shown=base.slice(a,b);
+  let bn="";
+  if(mode==="demo")bn=`<h3>目前是示範模式</h3><p>班次是示範資料。輸入你的 TDX 金鑰，就會顯示<b>台鐵真實時刻</b>和<b>即時誤點</b>。</p><button class="act" data-set>輸入金鑰</button>`;
+  else if(errMsg)bn=`<h3>資料讀取失敗</h3><p>${errMsg}</p><button class="act" id="retry">重新讀取</button>`;
+  else if(busy&&!src.length)bn=`<h3>正在讀取班次…</h3><p>第一次查詢這段路線會比較久一點。</p>`;
+  else if(!today)bn=`<h3>${["","明天","後天"][qDay]} ${dayLbl(qDay)}（${wkLbl(qDay)}）的班次</h3><p>${from.name} → ${to.name} 共 ${src.length} 班${src.length?`，首班 <b>${fmt(src[0].dep)}</b>，末班 ${fmt(src[src.length-1].dep)}`:""}。</p>`;
+  else if(nx){const dd=delayOf(nx.no),mm=Math.max(0,Math.ceil(nx.dep+dd-now));bn=`<h3>下一班 ${mm} 分後發車</h3><p>${nx.label} ${nx.no}，<b>${fmt(nx.dep)}</b> 從${from.name}出發${dd>0?`（目前晚 ${dd} 分）`:""}，${fmt(nx.arr)} 抵達${to.name}。</p>`}
+  else bn=`<h3>今天的班次已結束</h3><p>${from.name} → ${to.name} 今天已經沒有車了，可以點上面的「明天」查詢。</p>`;
+  $("banner").innerHTML=bn;
+  $("count").textContent=`${today?"今天":dayLbl(qDay)} 共 ${base.length} 班`;
+  const item=m=>{const d=dl(m),dd=m.dep+d-now,gone=today&&dd<-.3,running=today&&posOf(m,now);
+    const cd=!today?"":gone?(running?`<span class="cd">行駛中</span>`:`<span class="cd" style="color:var(--dim)">已開走</span>`):dd<1?`<span class="cd soon">即將發車</span>`:dd<60?`<span class="cd${dd<5?" soon":""}">${Math.ceil(dd)} 分後</span>`:"";
+    const lk=locked&&locked.no===m.no;
+    const acts=today&&(!gone||running)?`<span class="acts"><button class="pillbtn lock${lk?" on":""}" data-act="lock">${lk?"已鎖定":"鎖定"}</button><button class="pillbtn" data-act="map"><svg width="15" height="15"><use href="#i-map"/></svg>位置</button></span>`:"";
+    return `<div class="item${m===nx&&today?" next":""}${gone&&!running?" gone":""}" data-no="${m.no}">
       <div class="thumb" style="--c:${TYPES[m.type].c}"><svg width="58" height="58" style="color:var(--c)"><use href="#i-front"/></svg><small>${m.label}</small></div>
       <div class="info"><h4>${m.label} ${m.no} ${cd}</h4>
         <div class="times">${fmt(m.dep)}<span>→</span>${fmt(m.arr)}</div>
         <div class="meta">${Math.round(m.arr-m.dep)} 分・往${m.dest}</div>
-        <div class="row"><span>${delayHtml(m.no)}</span><span class="pillbtn"><svg width="15" height="15"><use href="#i-map"/></svg>看位置</span></div></div></button>`}).join("")
-    +(list.length>25&&!showAll?`<button class="more" id="moreBtn">顯示全部 ${list.length} 班</button>`:"")
+        <div class="row"><span class="badges">${tpHtml(m,from.id,to.id)}${today?delayHtml(m.no):""}</span>${acts}</div></div></div>`};
+  $("list").innerHTML=busy&&!src.length?`<div class="loading"><span class="spin"></span>讀取中…</div>`:base.length?
+    (a>0?`<button class="more" id="earlierBtn">↑ 更早的班次（還有 ${a} 班）</button>`:"")+
+    (shown.length?shown.map(item).join(""):`<div class="empty">${fmt(startT)} 之後沒有班次了</div>`)+
+    (b<base.length?`<button class="more" id="laterBtn">↓ 更晚的班次（還有 ${base.length-b} 班）</button>`:"")
     :`<div class="empty">沒有符合的班次</div>`;
-  $("foot").innerHTML=mode==="live"?`資料來源：交通部 TDX 運輸資料流通服務${liveAt?`<br>即時誤點更新於 ${fmt(nowMin()-(Date.now()-liveAt)/6e4)}`:""}`:"示範資料，非台鐵官方時刻。";
+  $("foot").innerHTML=(mode==="live"?`資料來源：交通部 TDX 運輸資料流通服務${liveAt?`<br>即時誤點更新於 ${fmt(nowMin()-(Date.now()-liveAt)/6e4)}`:""}`:"示範資料，非台鐵官方時刻。")+`<br>月票標示依 TPASS 基北北桃範圍（台鐵基隆—新富）與車種判斷，以台鐵公告為準。`;
 }
-$("chips").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;filter=b.dataset.f;renderTable()});
-$("list").addEventListener("click",e=>{if(e.target.id==="moreBtn"){showAll=true;renderTable();return}const it=e.target.closest(".item");if(!it)return;selNo=it.dataset.no;go("live");setFollow(true);renderCard();ensureStops()});
+$("chips").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;filter=b.dataset.f;qEarlier=0;qLater=20;renderTable()});
+$("days").addEventListener("click",e=>{const b=e.target.closest(".day");if(!b)return;qDay=+b.dataset.d;qEarlier=0;qLater=20;loadTable()});
+$("qTime").addEventListener("change",e=>{const v=tm(e.target.value);qTime=v==null||isNaN(v)?null:v;qEarlier=0;qLater=20;renderTable()});
+$("qNow").onclick=()=>{qTime=null;$("qTime").value="";qEarlier=0;qLater=20;renderTable()};
+$("list").addEventListener("click",e=>{
+  if(e.target.id==="earlierBtn"){qEarlier+=10;renderTable();return}
+  if(e.target.id==="laterBtn"){qLater+=20;renderTable();return}
+  const it=e.target.closest(".item");if(!it||qDay!==0)return;
+  const t=trips.find(x=>x.no===it.dataset.no);if(!t)return;
+  const act=(e.target.closest("[data-act]")||{}).dataset;
+  if(act&&act.act==="lock"){setLock(t.no,t);return}
+  if(t.dep+delayOf(t.no)<nowMin()-.3&&!posOf(t,nowMin()))return;
+  selNo=t.no;go("live");setFollow(true);renderCard();ensureStops()});
 $("banner").addEventListener("click",e=>{if(e.target.id==="retry")refreshAll()});
+
+// ================= 我的車次（鎖定） =================
+async function setLock(no,hint){
+  no=String(no).trim();if(!no)return;
+  let t=null;
+  try{
+    if(hint&&hint.stops)t={no,type:hint.type,label:hint.label,raw:hint.raw,dest:hint.dest,stops:hint.stops};
+    else{toast("讀取車次資料中…");t=await fetchTrain(no)}
+  }catch(e){toast(e.message);return}
+  if(!t||!t.stops||!t.stops.length){toast(`找不到今天的 ${no} 次列車`);return}
+  locked=t;store.set("gl-lock",JSON.stringify({no,date:todayStr()}));
+  if(mode==="live"&&!live.size)refreshLive();
+  go("mine");
+}
+function unlock(){locked=null;store.del("gl-lock");renderMine();renderCard()}
+function renderMine(){
+  const el=$("mine");if(!el)return;const now=nowMin();
+  if(!locked){
+    const inp=$("lockNo");if(inp&&document.activeElement===inp)return;const keepV=inp?inp.value:"";
+    const q=upcoming().slice(0,5);
+    el.innerHTML=`<div class="banner"><h3 style="color:var(--blue-hi)">鎖定你正在搭的車</h3><p>輸入車次號碼，就能看到這班車<b style="color:#fff">每一站幾點到</b>，還有現在開到哪裡。</p></div>
+      <div class="route lockin"><input id="lockNo" inputmode="numeric" pattern="[0-9]*" placeholder="車次號碼，例如 130" autocomplete="off"><button class="lockgo" id="lockGo">鎖定</button></div>
+      ${q.length?`<div class="sect">或從 ${from.name} → ${to.name} 接下來的班次選</div><div class="quick">${q.map(m=>`<button class="qk" data-no="${m.no}"><div class="tile" style="--c:${TYPES[m.type].c};width:36px;height:36px"><svg width="18" height="18"><use href="#i-train"/></svg></div><div><b>${m.label} ${m.no}</b><div style="font-size:12px;color:var(--muted)">${fmt(m.dep)} → ${fmt(m.arr)}・往${m.dest}</div></div><span>鎖定 ›</span></button>`).join("")}</div>`:""}`;
+    if(keepV)$("lockNo").value=keepV;
+    return;
+  }
+  const t=locked,s=t.stops,d=delayOf(t.no),hasLive=mode==="live"&&live.has(t.no),p=posOf(t,now);
+  const nxI=s.findIndex(x=>x.arr+d>now),cur=p&&p.at?s.findIndex(x=>x.id===p.at):-1;
+  const last=s[s.length-1],done=now>last.arr+d+1;
+  const passed=k=>cur>=0?k<cur:(nxI<0?true:k<nxI);
+  const prog=done?100:Math.max(0,Math.min(100,(now-s[0].dep-d)/(last.arr-s[0].dep)*100));
+  let badge=!p&&now<s[0].dep+d?`<span class="state wait">● 未發車</span>`:done?`<span class="state wait">● 已到站</span>`:p&&p.at?`<span class="state stop">● 停靠中</span>`:`<span class="state">● 行駛中</span>`;
+  const dly=hasLive?(d>0?`<span class="dly late">晚 ${d} 分</span>`:`<span class="dly">準點</span>`):"";
+  let main;
+  if(done)main=`<div class="nextst"><div><small>已抵達終點</small><br><b>${nm(last.id)}</b></div><div class="eta">${fmt(last.arr+d)}</div></div>`;
+  else if(cur>=0)main=`<div class="nextst"><div><small>目前停靠</small><br><b>${nm(s[cur].id)}</b></div><div class="eta">${fmt(s[cur].dep+d)}<small style="display:block;text-align:right">開車</small></div>${s[cur+1]?`<div class="sub">下一站 ${nm(s[cur+1].id)}，預計 ${fmt(s[cur+1].arr+d)} 到</div>`:""}</div>`;
+  else{const n=s[nxI],mm=Math.max(0,Math.ceil(n.arr+d-now));main=`<div class="nextst"><div><small>下一站</small><br><b>${nm(n.id)}</b></div><div class="eta">${mm<1?"即將到站":mm+" 分後"}</div><div class="sub">預計 ${fmt(n.arr+d)} 到站${p&&p.prev?`・目前在 ${nm(p.prev)} → ${nm(p.next)} 之間`:""}</div></div>`}
+  const rows=s.map((x,k)=>{const pa=passed(k),c=k===cur||(cur<0&&k===nxI&&!done),mk=x.id===from.id||x.id===to.id;
+    const tag=k===cur?"停靠中":(cur<0&&k===nxI&&!done)?"下一站":mk?(x.id===from.id?"你的出發站":"你的抵達站"):"";
+    const est=x.arr+d,t2=k===0?x.dep:x.arr;
+    return `<div class="tst${pa?" past":""}${c?" cur":""}${mk?" mark":""}"><i></i><div class="n">${nm(x.id)}${tag?`<small>${tag}</small>`:""}</div><div class="t${d>0&&!pa?" late":""}">${pa?fmt(t2):fmt(t2+d)}${d>0&&!pa?`<small>表定 ${fmt(t2)}</small>`:pa?`<small>已過站</small>`:""}</div></div>`}).join("");
+  el.innerHTML=`<div class="hero">
+      <div class="chead"><div class="tile" style="--c:${TYPES[t.type].c}"><svg width="22" height="22"><use href="#i-train"/></svg></div><div style="min-width:0"><h2>🔒 ${t.label} ${t.no}</h2><p>${nm(s[0].id)} → ${t.dest||nm(last.id)}</p></div>${badge}</div>
+      <div class="badges">${dly}${tpType(t)?`<span class="tp ok">月票車種可搭</span>`:`<span class="tp no">月票不適用</span>`}</div>
+      ${main}
+      <div><div class="prog"><i style="width:${prog}%"></i></div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:6px"><span>${nm(s[0].id)} ${fmt(s[0].dep)}</span><span>終點 ${nm(last.id)} ${fmt(last.arr+d)}</span></div></div>
+      <div class="btns"><button class="btn line" id="unlockB">解除鎖定</button><button class="btn blue" id="mapB">在地圖上看</button></div>
+    </div>
+    <div class="sect">停靠站<span>${d>0?`已加上誤點 ${d} 分`:hasLive?"目前準點":"表定時間"}</span></div>
+    <div class="tl">${rows}</div>
+    <p class="foot">${mode==="live"?"到站時間＝表定時間＋目前誤點，每分鐘更新。":"示範資料。"}</p>`;
+}
+document.addEventListener("click",e=>{
+  if(e.target.id==="lockGo"){setLock($("lockNo").value);return}
+  if(e.target.id==="unlockB"){unlock();return}
+  if(e.target.id==="mapB"&&locked){selNo=locked.no;go("live");setFollow(true);renderCard();return}
+  const q=e.target.closest(".qk");if(q){const t=trips.find(x=>x.no===q.dataset.no);setLock(q.dataset.no,t);}
+});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="lockNo")setLock(e.target.value)});
+async function restoreLock(){const l=jget("gl-lock");if(!l||l.date!==todayStr()){store.del("gl-lock");return}try{const t=await fetchTrain(l.no);if(t&&t.stops&&t.stops.length)locked=t}catch(e){}if(screen==="mine")renderMine()}
 
 // ================= 資料流程 =================
 let stopsBusy=false;
@@ -568,7 +746,7 @@ async function ensureStops(){
     if(want.length){computeRoute();renderCard()}
   }finally{stopsBusy=false}
 }
-async function refreshLive(){if(mode!=="live")return;try{await loadLive();errMsg="";}catch(e){toast(e.message)}renderCard();if(screen==="table")renderTable()}
+async function refreshLive(){if(mode!=="live")return;try{await loadLive();}catch(e){toast(e.message)}renderCard();if(screen==="table")renderTable();if(screen==="mine")renderMine()}
 async function loadTrips(){
   errMsg="";
   if(mode==="demo"){trips=demoOD(from.id,to.id);computeRoute();return}
@@ -577,20 +755,20 @@ async function loadTrips(){
   loading=false;computeRoute();
 }
 async function refreshAll(){
-  await loadTrips();selNo=null;fitRoute(!view.init);view.init=true;renderCard();renderTable();
+  await loadTrips();if(qDay)loadTable();selNo=null;fitRoute(!view.init);view.init=true;renderCard();renderTable();
   setFollow(false);clearTimeout(refreshAll.t);refreshAll.t=setTimeout(()=>setFollow(true),1200);
   if(mode==="live"){await refreshLive();ensureStops()}
 }
 
 // ================= 導覽與選站 =================
-function go(s){screen=s;$("scrLive").hidden=s!=="live";$("scrTable").hidden=s!=="table";
+function go(s){screen=s;$("scrLive").hidden=s!=="live";$("scrTable").hidden=s!=="table";$("scrMine").hidden=s!=="mine";if(s==="mine")renderMine();
   document.querySelectorAll(".tabbar button").forEach(b=>b.setAttribute("aria-current",b.dataset.go===s));
   if(s==="live")requestAnimationFrame(()=>{resize();renderCard()});else renderTable()}
 document.querySelectorAll(".tabbar button").forEach(b=>b.onclick=()=>go(b.dataset.go));
 $("backBtn").onclick=()=>go("live");
 
 function routeChanged(){
-  store.set("gl-route2",JSON.stringify({f:from.name,t:to.name}));
+  store.set("gl-route2",JSON.stringify({f:from.name,t:to.name}));qTime=null;qEarlier=0;qLater=20;
   $("lFrom").textContent=from.name;$("lTo").textContent=to.name;$("fromName").textContent=from.name;$("toName").textContent=to.name;
   refreshAll();
 }
@@ -635,9 +813,9 @@ $("kClear").onclick=()=>{keys=null;token=null;["gl-keys","gl-token"].forEach(k=>
 // ================= 啟動 =================
 function pickDefaults(){const r=jget("gl-route2")||{f:"桃園",t:"松山"};from=byName(r.f)||byName("桃園")||STN[0];to=byName(r.t)||byName("松山")||STN[1];if(from===to)to=STN.find(s=>s!==from)}
 function setModeTag(){const e=$("modeTag");e.classList.toggle("on",mode==="live");e.lastChild.textContent=mode==="live"?"即時":"示範"}
-function startDemo(){mode="demo";live=new Map();if(!demoTrains)buildDemo();setStations(demoStations());pickDefaults();setModeTag();$("lFrom").textContent=from.name;$("lTo").textContent=to.name;view.init=false;refreshAll()}
+function startDemo(){mode="demo";live=new Map();locked=null;if(!demoTrains)buildDemo();setStations(demoStations());pickDefaults();setModeTag();restoreLock();$("lFrom").textContent=from.name;$("lTo").textContent=to.name;view.init=false;refreshAll()}
 async function startLive(){
-  const s=await loadStationsLive();mode="live";setStations(s);pickDefaults();setModeTag();
+  const s=await loadStationsLive();mode="live";locked=null;setStations(s);pickDefaults();setModeTag();restoreLock();
   $("lFrom").textContent=from.name;$("lTo").textContent=to.name;view.init=false;await refreshAll();
 }
 if(!store.get("gl-onboarded"))$("splash").hidden=false;
@@ -649,7 +827,7 @@ resize();
   if(keys){try{await startLive()}catch(e){toast(e.message+"，先用示範模式");startDemo()}}
   else startDemo();
 })();
-setInterval(()=>{if(document.hidden)return;if(screen==="live")renderCard();else renderTable()},5000);
+setInterval(()=>{if(document.hidden)return;if(screen==="live")renderCard();else if(screen==="table")renderTable();else renderMine()},5000);
 setInterval(()=>{if(!document.hidden){refreshLive();ensureStops()}},60000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&mode==="live"&&Date.now()-liveAt>45000){refreshLive();ensureStops()}});
 requestAnimationFrame(draw);
